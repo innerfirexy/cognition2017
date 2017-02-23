@@ -4,3 +4,8 @@
 
 library(data.table)
 library(ggplot2)
+
+
+##
+# Plot Figure 1
+dt.swbd = fread('data/SWBD_entropy.csv')
