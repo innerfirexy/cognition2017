@@ -20,12 +20,12 @@ def db_conn(db_name):
 def select_entropy():
     conn = db_conn('swbd')
     cur = conn.cursor()
-    sql = 'select convID, turnID, speaker, globalID, ent, tileID, inTileID from entropy where ent IS NOT NULL'
+    sql = 'select convID, turnID, speaker, globalID, ent, wordNum, tileID, inTileID from entropy where ent IS NOT NULL'
     cur.execute(sql)
     data = cur.fetchall()
     with open('SWBD_entropy_db.csv', 'w', newline='') as fw:
         csvwriter = csv.writer(fw, delimiter=',')
-        csvwriter.writerow(['convId', 'turnId', 'speaker', 'globalId', 'ent', 'topicId', 'inTopicId'])
+        csvwriter.writerow(['convId', 'turnId', 'speaker', 'globalId', 'ent', 'wordNum', 'topicId', 'inTopicId'])
         for row in data:
             csvwriter.writerow(row)
 
