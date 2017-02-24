@@ -16,8 +16,8 @@ def db_conn(db_name):
     return conn
 
 ##
-# select entropy data
-def select_entropy():
+# select Switchboard entropy data
+def select_SWBD_entropy():
     conn = db_conn('swbd')
     cur = conn.cursor()
     sql = 'select convID, turnID, speaker, globalID, ent, wordNum, tileID, inTileID from entropy where ent IS NOT NULL'
@@ -30,6 +30,23 @@ def select_entropy():
             csvwriter.writerow(row)
 
 ##
+# select Switchboard text from db
+def select_SWBD_text():
+    conn = db_conn('swbd')
+    cur = conn.cursor()
+    sql = 'select convID, turnID, speaker, globalID, rawWord from entropy where rawWord <> \"\"'
+    cur.execute(sql)
+    data = cur.fetchall()
+    with open('SWBD_text_db.csv', 'w', newline='') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'turnId', 'speaker', 'globalId', 'rawWord'])
+        for row in data:
+            csvwriter.writerow(row)
+    pass
+
+
+##
 # main
 if __name__ == '__main__':
-    select_entropy()
+    # select_SWBD_entropy()
+    select_SWBD_text()

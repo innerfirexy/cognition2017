@@ -8,14 +8,13 @@ library(data.table)
 dt = fread('data/SWBD_entropy_db.csv')
 setkey(dt, convId, topicId)
 # head(dt)
-#    convId turnId speaker globalId     ent topicId inTopicId
-# 1:      1      1       A        1 1.48789       1         1
-# 2:      1      1       A        2 8.64813       1         2
-# 3:      1      2       B        3 6.30240       1         3
-# 4:      1      2       B        4 7.12943       1         4
-# 5:      1      3       A        5 6.24289       2         1
-# 6:      1      3       A        6 4.01994       2         2
-
+#    convId turnId speaker globalId     ent wordNum topicId inTopicId
+# 1:      1      1       A        1 1.48789       1       1         1
+# 2:      1      1       A        2 8.64813      26       1         2
+# 3:      1      2       B        3 6.30240      23       1         3
+# 4:      1      2       B        4 7.12943      19       1         4
+# 5:      1      3       A        5 6.24289       1       2         1
+# 6:      1      3       A        6 4.01994       1       2         2
 
 # function
 findInitiators = function(data, thrhld) {
