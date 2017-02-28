@@ -108,4 +108,4 @@ if __name__ == '__main__':
     # select_SWBD_text()
     # select_BNC_entropy()
     # select_BNC_text100()
-    select_BNC_textfull()
+    # select_BNC_textfull()

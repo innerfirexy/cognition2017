@@ -7,6 +7,8 @@ library(tidyverse)
 library(stringr)
 library(lme4)
 library(lmerTest)
+library(ggplot2)
+library(ggalt)
 
 
 # read Switchboard text data
@@ -170,3 +172,115 @@ t.test(dt.swbd.bound$llaAt, dt.swbd.bound$llaAfter)
 t.test(dt.swbd.bound$llaBefore, dt.swbd.bound$llaAfter)
 # t = 21.338, df = 17992, p-value < 2.2e-16
 # Alignment before boundaries is larger then alignment after boundaries
+
+
+
+
+#########
+# The following analysis applies to BNC
+#########
+
+# read data
+dt.bnc = fread('data/BNC_text_db100.csv')
+setkey(dt.bnc, convId)
+# glimpse(dt.bnc)
+# Observations: 54,376
+# Variables: 6
+# $ convId          <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,...
+# $ turnId          <int> 1, 2, 2, 3, 4, 5, 6, 7, 7, 8, 9, 11, 12, 13, 13, 15, 16, 17, 18, 19, 19, 21, 21, 23, 24, ...
+# $ speaker         <chr> "A", "A", "A", "B", "A", "B", "A", "B", "B", "A", "B", "B", "A", "B", "B", "B", "A", "B",...
+# $ speakerOriginal <chr> "PS6U1", "PS6U1", "PS6U1", "PS51S", "PS6U1", "PS51S", "PS6U1", "PS51S", "PS51S", "PS6U1",...
+# $ globalId        <int> 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25...
+# $ rawWord         <chr> "how 's it going", "I do n't know", "I like your", "do n't ask do n't even talk to me abo...
+
+# compute LLA
+system.time(dt.bnc.align <- compute_LLA(dt.bnc))
+#  user  system elapsed
+# 5.125   0.112   5.247
+
+# lla ~ turnId
+m = lmer(lla ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -3.063e-05  2.200e-05  1.933e+04  -1.392    0.164
+
+# lla ~ log(turnId)
+m = lmer(lla ~ log(turnId) + (1|convId), dt.bnc.align)
+summary(m)
+# log(turnId) -5.247e-04  4.961e-04  1.765e+04  -1.058     0.29
+
+summary(dt.bnc.align$lla)
+# density
+p = ggplot(dt.bnc.align[lla>0,], aes(x = lla)) + geom_bkde(alpha=.5)
+
+# non-zero lla ~ turnId
+m = lmer(lla ~ turnId + (1|convId), dt.bnc.align[lla>0,])
+summary(m)
+# turnId      -1.765e-05  3.845e-05  8.433e+03  -0.459    0.646
+
+# non-zero lla ~ log(turnId)
+m = lmer(lla ~ log(turnId) + (1|convId), dt.bnc.align[lla>0,])
+summary(m)
+# log(turnId) -4.090e-04  8.488e-04  8.541e+03  -0.482     0.63
+
+# w/o random effect
+m = lm(lla ~ turnId, dt.bnc.align)
+summary(m)
+# turnId      -9.318e-05  1.931e-05  -4.826  1.4e-06 ***
+m = lm(lla ~ log(turnId), dt.bnc.align)
+summary(m)
+# log(turnId) -0.0016952  0.0004432  -3.825 0.000131 ***
+
+## transform lla
+dt.bnc.align$lla_trans = dt.bnc.align$lla / max(dt.bnc.align[!is.nan(lla), lla])
+m = lmer(lla_trans ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -3.829e-05  2.750e-05  1.933e+04  -1.392    0.164
+m = lmer(lla_trans ~ log(turnId) + (1|convId), dt.bnc.align)
+summary(m)
+# log(turnId) -6.558e-04  6.202e-04  1.765e+04  -1.058     0.29
+m = lmer(log(lla_trans + 1e-8) ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -2.987e-03  2.218e-03  2.384e+04   -1.347    0.178
+m = lmer(log(lla_trans + 1e-8) ~ log(turnId) + (1|convId), dt.bnc.align)
+summary(m)
+# log(turnId) -5.237e-02  5.013e-02  2.111e+04  -1.045    0.296
+
+##
+# combine with dt.bnc.topic
+dt.bnc.topic = fread('data/BNC_entropy_db.csv')
+setkey(dt.bnc.topic, convId, turnId)
+
+dt.bnc.comb = dt.bnc.topic[dt.bnc.align, nomatch=0]
+# shrink
+dt.bnc.comb = dt.bnc.comb[, {
+        .(topicId = topicId[1], inTopicId = mean(inTopicId), lla = lla[1], lla_trans = lla_trans[1], ent = mean(ent))
+    }, by = .(convId, turnId)]
+# add uniqueTopicId
+dt.bnc.comb[, uniqueTopicId := .GRP, by = .(convId, topicId)]
+
+##
+# models
+m = lmer(lla ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   -1.127e-04  7.354e-05  2.021e+04  -1.533    0.125
+m = lmer(lla ~ log(inTopicId) + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# log(inTopicId) -1.621e-03  5.673e-04  2.770e+04  -2.857  0.00428 **
+##
+## LLA decreases within topic episode
+
+##
+# How is lla correlated with entropy
+m = lmer(lla ~ ent + (1|convId), dt.bnc.comb)
+summary(m)
+# ent         6.505e-04  8.838e-05 3.154e+04    7.36 1.88e-13 ***
+
+# shift `ent` column, so as to correlate lla with the entropy of preceding utterance
+shiftedEnt = shift(dt.bnc.comb$ent)
+dt.bnc.comb$shiftedEnt = shiftedEnt
+# remove the first row of each conversation
+dt.bnc.tmp = dt.bnc.comb[, .SD[2:.N,], by=convId]
+
+m = lmer(lla ~ shiftedEnt + (1|convId), dt.bnc.tmp)
+summary(m)
+# shiftedEnt  8.741e-04  8.914e-05 3.154e+04   9.806   <2e-16 ***
