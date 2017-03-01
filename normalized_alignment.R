@@ -119,3 +119,125 @@ m = lmer(llaNorm ~ shiftedEnt + (1|convId), dt.swbd.tmp)
 summary(m)
 # shiftedEnt  4.935e-02  1.828e-03 7.636e+04   27.00   <2e-16 ***
 # llaNorm is correlated with the entropy of previous utterance
+
+
+##
+# How does llaNorm change across topic boundaries
+dt.swbd.bound = dt.swbd.comb[, {
+        # find the positions where topic shift happens
+        beforeInd = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd = atInd + 1
+        .(llaNormBefore = llaNorm[beforeInd], llaNormAt = llaNorm[atInd], llaNormAfter = llaNorm[afterInd])
+    }, by = .(convId)]
+# melt
+dt.swbd.bound.melt = melt(dt.swbd.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
+# plot
+p = ggplot(dt.swbd.bound.melt, aes(x=position, y=llaNorm)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar')
+pdf('figs/llaNorm_acrossBound_SWBD.pdf', 5, 5)
+plot(p)
+dev.off()
+#
+# It shows that llaNorm decreases across topic boundary
+
+
+##
+# Plot llaNorm against inTopicId, with facet_wrap by topicId
+mean(dt.swbd.comb[, max(inTopicId), by=uniqueTopicId]$V1) # 9
+p = ggplot(dt.swbd.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=llaNorm)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    facet_wrap(~topicId, nrow = 1)
+pdf('figs/llaNorm_vs_inTopicId_SWBD.pdf', 9, 2.5)
+plot(p)
+dev.off()
+
+
+
+######
+# The following analysis applies to BNC
+dt.bnc = fread('data/BNC_text_db100.csv')
+setkey(dt.bnc, convId)
+
+dt.bnc.align = compute_LLA_sumLen(dt.bnc) # takes a few seconds
+
+# compute the mean lla for each sumLen level
+setkey(dt.bnc.align, sumLen)
+dt.bnc.align.mean = dt.bnc.align[, {.(llaMean = mean(lla[!is.nan(lla)]))}, by = sumLen]
+# join `llaMean` column back to dt.bnc.align
+dt.bnc.align = dt.bnc.align[dt.bnc.align.mean, nomatch = 0]
+# compute the normalized lla
+dt.bnc.align[, llaNorm := lla / llaMean]
+
+# Use models to check how llaNorm changes within dialogue and topic episode
+m = lmer(llaNorm ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# n.s.
+m = lmer(llaNorm ~ log(turnId) + (1|convId), dt.bnc.align)
+summary(m)
+# n.s.
+
+# Read topic information data and join with alignment data
+dt.bnc.topic = fread('data/BNC_entropy_db.csv')
+setkey(dt.bnc.topic, convId, turnId)
+setkey(dt.bnc.align, convId, turnId)
+dt.bnc.comb = dt.bnc.topic[dt.bnc.align, nomatch=0]
+
+# shrink inTopicId column by computing the mean
+dt.bnc.comb = dt.bnc.comb[, {
+        .(topicId = topicId[1], inTopicId = mean(inTopicId), llaNorm = llaNorm[1], ent = mean(ent))
+    }, by = .(convId, turnId)]
+# add uniqueTopicId
+dt.bnc.comb[, uniqueTopicId := .GRP, by = .(convId, topicId)]
+
+# models
+m = lmer(llaNorm ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   7.558e-03  1.767e-03 1.958e+04   4.277  1.9e-05 ***
+# Yes, llaNorm increases within topic episode
+
+m = lmer(llaNorm ~ ent + (1|convId), dt.bnc.comb)
+summary(m)
+# ent         2.033e-02  2.156e-03 3.144e+04   9.428   <2e-16 ***
+
+# add shifted entropy column
+shiftedEnt = shift(dt.bnc.comb$ent)
+dt.bnc.comb$shiftedEnt = shiftedEnt
+dt.bnc.tmp = dt.bnc.comb[, .SD[2:.N,], by=convId]
+
+m = lmer(llaNorm ~ shiftedEnt + (1|convId), dt.bnc.tmp)
+summary(m)
+# shiftedEnt  2.442e-02  2.174e-03 3.145e+04   11.23   <2e-16 ***
+# llaNorm correlates with entropy of previous utterance
+
+
+##
+# How does llaNorm change across topic boundaries
+dt.bnc.bound = dt.bnc.comb[, {
+        # find the positions where topic shift happens
+        beforeInd = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd = atInd + 1
+        .(llaNormBefore = llaNorm[beforeInd], llaNormAt = llaNorm[atInd], llaNormAfter = llaNorm[afterInd])
+    }, by = .(convId)]
+# melt
+dt.bnc.bound.melt = melt(dt.bnc.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
+# plot
+p = ggplot(dt.bnc.bound.melt, aes(x=position, y=llaNorm)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar')
+pdf('figs/llaNorm_acrossBound_BNC.pdf', 5, 5)
+plot(p)
+dev.off()
+
+
+##
+# Plot llaNorm against inTopicId, with facet_wrap by topicId
+mean(dt.bnc.comb[, max(inTopicId), by=uniqueTopicId]$V1) # 9
+p = ggplot(dt.bnc.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=llaNorm)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    facet_wrap(~topicId, nrow = 1)
+pdf('figs/llaNorm_vs_inTopicId_BNC.pdf', 9, 2.5)
+plot(p)
+dev.off()
