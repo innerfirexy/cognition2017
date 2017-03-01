@@ -238,7 +238,8 @@ mean(dt.bnc.comb[, max(inTopicId), by=uniqueTopicId]$V1) # 9
 p = ggplot(dt.bnc.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=llaNorm)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5) +
     stat_summary(fun.y = mean, geom = 'line') +
-    facet_wrap(~topicId, nrow = 1)
+    facet_wrap(~topicId, nrow = 1) +
+    xlab('within topic position of utterance') + ylab('LLA normalized by length')
 pdf('figs/llaNorm_vs_inTopicId_BNC.pdf', 9, 2.5)
 plot(p)
 dev.off()
