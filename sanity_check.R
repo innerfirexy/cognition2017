@@ -31,3 +31,27 @@ summary(m)
 
 
 ## Switchboard data trained from BNC
+dt = fread('data/SWBD_entropy_fromBNC.csv')
+
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -3.650e-04  3.272e-05  6.264e+04  -11.16   <2e-16 ***
+m = lmer(ent ~ log(globalId) + (1|convId), dt)
+summary(m)
+# log(globalId) -3.225e-02  1.867e-03  1.172e+05  -17.27   <2e-16 ***
+
+# plot
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+
+## BNC data trained from Switchboard
+dt = fread('data/BNC_entropy_fromSWBD.csv')
+
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -2.878e-04  1.273e-04  3.706e+04  -2.261   0.0238 *
+m = lmer(ent ~ log(globalId) + (1|convId), dt)
+summary(m)
+# log(globalId) -2.088e-02  3.194e-03  3.195e+04  -6.536 6.41e-11 ***

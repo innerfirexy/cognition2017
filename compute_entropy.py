@@ -96,9 +96,49 @@ def crossvalidate(inputfile, outputfile):
 
 
 ##
-# compute the entropy of Switchboard by using the model trained from BNC
-def SWBD_fromBNC():
-    pass
+# compute the entropy using LM trained from an external file
+def externalLM(testfile, trainfile, outputfile):
+    # read text from trainfile, and write to a temporary file
+    with open(trainfile, 'r') as fr, open('data/lm/train.txt', 'w') as fw:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            text = items[4]
+            fw.write(text + '\n')
+    # train the LM
+    lmfile = 'data/lm/train.lm'
+    srilm_dir = '/Users/yangxu/projects/srilm-1.7.1/bin/macosx/'
+    train_cmd = [srilm_dir + 'ngram-count', '-order', '3', '-text', 'data/lm/train.txt', '-lm', lmfile]
+    return_code = subprocess.check_call(train_cmd)
+    if return_code != 0:
+        raise Exception('trainning failed')
+
+    # read text from testfile and compute entropy
+    lm = initLM(3)
+    readLM(lm, lmfile)
+    entropy_results = []
+    with open(testfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            cid, gid, text = int(items[0]), int(items[3]), items[4]
+            try:
+                ppl = getSentencePpl(lm, text, len(text.split()))
+            except Exception as e:
+                print('convId: %s' % cid)
+                print('globalId: %s' % gid)
+                raise
+            else:
+                ent = math.log(ppl, 10)
+                entropy_results.append((cid, gid, ent))
+    # write entropy_results to outputfile
+    with open(outputfile, 'w') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'globalId', 'ent'])
+        for row in entropy_results:
+            csvwriter.writerow(row)
+
+
 
 ##
 # main
@@ -107,4 +147,12 @@ if __name__ == '__main__':
 
     # Cut the `speakerOriginal` column in BNC_text_db100.csv
     # $ mlr --csv cut -f convId,turnId,speaker,globalId,rawWord BNC_text_db100.csv > BNC_text_db100_mlrcut.csv
-    crossvalidate(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate.csv')
+    # crossvalidate(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate.csv')
+
+    # compute Switchboard using LM trained from BNC
+    # externalLM(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC.csv')
+
+    # compute BNC using LM trained from Switchboard
+    # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
+
+    # using LM trained from Penn Treebank WSJ corpus
