@@ -73,3 +73,48 @@ for (i in 1:10) {
 ##
 # from the figs (thrhld 1 ~ 10)
 # Once thrhld > 1, the convergence patterns are significant
+
+
+##
+# find topic initiators for SWBD_entropy_crossvalidate_topic.csv
+dt = fread('data/SWBD_entropy_crossvalidate_topic.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# NOTE: YES, although the entropy computed this way decreases with globalId
+# It STILL increases within topic episode.
+
+
+##
+# find topic initiators for BNC_entropy_crossvalidate_topic.csv
+dt = fread('data/BNC_entropy_crossvalidate_topic.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=9), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   -1.040e-03  4.484e-04  5.084e+04  -2.319   0.0204 *
+# NOTE: this is inconsistent with Switchboard
