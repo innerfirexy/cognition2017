@@ -9,6 +9,7 @@ import sys
 import subprocess
 import csv
 import math
+import os
 
 from random import shuffle
 from srilm import *
@@ -66,7 +67,8 @@ def crossvalidate(inputfile, outputfile):
         lmfile = 'data/lm/lm_fold%s.lm' % i
         srilm_dir = '/Users/yangxu/projects/srilm-1.7.1/bin/macosx/'
         train_cmd = [srilm_dir + 'ngram-count', '-order', '3', '-text', trainfile, '-lm', lmfile]
-        return_code = subprocess.check_call(train_cmd)
+        FNULL = open(os.devnull, 'w') # suppress stdout and stderr
+        return_code = subprocess.check_call(train_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
         if return_code != 0:
             raise Exception('trainning failed for fold %s' % i)
         print('training done for fold %s' % i)
@@ -178,8 +180,56 @@ def crossvalidate_samepos(inputfile, outputfile, sentence_n=100):
         return text
 
     # conduct cross-validation
-    
-    pass
+    entropy_results = []
+    for i in range(0, foldN):
+        # for each sentence position
+        for j in range(1, sentence_n+1):
+            # collect all sentences at position j in other convIds than foldIds[i]
+            traintext = []
+            for k in range(0, i) + range(i+1, foldN):
+                text = readtext(alldata, foldIds[k], j)
+                traintext += text
+            # write traintext to file
+            trainfile = 'data/lm/train.txt'
+            with open(trainfile, 'w') as fw:
+                for text in traintext:
+                    fw.write(text + '\n')
+            # train the LM
+            lmfile = 'data/lm/train.lm'
+            srilm_dir = '/Users/yangxu/projects/srilm-1.7.1/bin/macosx/'
+            train_cmd = [srilm_dir + 'ngram-count', '-order', '3', '-text', trainfile, '-lm', lmfile]
+            FNULL = open(os.devnull, 'w') # suppress stdout and stderr
+            return_code = subprocess.check_call(train_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+            if return_code != 0:
+                raise Exception('trainning failed for fold %s at sentence position %s' % (i, j))
+            # compute entropy
+            lm = initLM(3)
+            readLM(lm, lmfile)
+            for cid in foldIds[i]:
+                if j in alldata[cid]:
+                    gid = j
+                    text = alldata[cid][j]
+                    try:
+                        ppl = getSentencePpl(lm, text, len(text.split()))
+                    except Exception as e:
+                        print('convId: %s' % cid)
+                        print('globalId: %s' % gid)
+                        raise
+                    else:
+                        ent = math.log(ppl, 10)
+                        entropy_results.append((cid, gid, ent))
+            # print process within a fold
+            sys.stdout.write('\rfold %s, %s/%s sentences done' % (i, j, sentence_n))
+            sys.stdout.flush()
+        # print when a fold is done
+        print('\nDone for fold %s' % i)
+
+    # write entropy_results to outputfile
+    with open(outputfile, 'w') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'globalId', 'ent'])
+        for row in entropy_results:
+            csvwriter.writerow(row)
 
 
 ##
@@ -196,5 +246,9 @@ if __name__ == '__main__':
 
     # compute BNC using LM trained from Switchboard
     # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
+
+    # compute entropy using LMs trained from sentences of same position by cross-validation
+    # crossvalidate_samepos(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate_samepos.csv')
+    crossvalidate_samepos(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate_samepos.csv')
 
     # using LM trained from Penn Treebank WSJ corpus
