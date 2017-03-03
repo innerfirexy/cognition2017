@@ -29,3 +29,15 @@ d1 = fread('data/BNC_entropy_crossvalidate.csv')
 d2 = fread('data/BNC_entropy_db.csv')
 d = combineTopic(d1, d2)
 fwrite(d, 'data/BNC_entropy_crossvalidate_topic.csv')
+
+# combine Switchboard entropy trained from BNC with topic columns
+d1 = fread('data/SWBD_entropy_fromBNC.csv')
+d2 = fread('data/SWBD_entropy_db.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_fromBNC_topic.csv')
+
+# combine BNC entropy trained from Switchboard with topic columns
+d1 = fread('data/BNC_entropy_fromSWBD.csv')
+d2 = fread('data/BNC_entropy_db.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/BNC_entropy_fromSWBD_topic.csv')
