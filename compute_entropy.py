@@ -277,9 +277,9 @@ if __name__ == '__main__':
     # externalTrain(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
 
     # compute entropy using LMs trained from sentences of same position by cross-validation
-    # crossvalidate_samepos(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate_samepos.csv')
-    # crossvalidate_samepos(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate_samepos.csv')
+    crossvalidate_samepos(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate_samepos.csv')
+    crossvalidate_samepos(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate_samepos.csv')
 
     # using LM trained from WSJ corpus
-    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')
-    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/BNC_entropy_fromWSJ.csv')
+    # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')
+    # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/BNC_entropy_fromWSJ.csv')
