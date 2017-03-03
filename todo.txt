@@ -1,0 +1,5 @@
+1. Figure out why the entropy computed using SRILM is different from that of nltk
+
+2. compute entropy using same position from other dialogue, e.g., train from BNC and compute on SWBD
+
+3. Examine how word frequency, or 1-gram language model generate.

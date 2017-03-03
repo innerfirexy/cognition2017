@@ -78,7 +78,10 @@ def select_BNC_text100():
         csvwriter = csv.writer(fw, delimiter=',')
         csvwriter.writerow(['convId', 'turnId', 'speaker', 'speakerOriginal', 'globalId', 'rawWord'])
         for row in data:
-            csvwriter.writerow(row)
+            text = row[-1].lower()
+            newrow = list(row[:-1])
+            newrow.append(text)
+            csvwriter.writerow(newrow)
     conn.close()
 
 ##
@@ -96,7 +99,11 @@ def select_BNC_textfull():
         csvwriter.writerow(['convId', 'speakerOriginal', 'globalId', 'turnId', 'localId', 'rawWord', 'wordNum', \
             'topicId', 'inTopicId'])
         for row in data:
-            csvwriter.writerow(row)
+            text = row[-4].lower()
+            newrow = list(row[:-4])
+            newrow.append(text)
+            newrow += list(row[-3:])
+            csvwriter.writerow(newrow)
     conn.close()
 
 
@@ -107,5 +114,5 @@ if __name__ == '__main__':
     # select_SWBD_entropy()
     # select_SWBD_text()
     # select_BNC_entropy()
-    # select_BNC_text100()
-    # select_BNC_textfull()
+    select_BNC_text100()
+    select_BNC_textfull()

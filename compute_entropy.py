@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # NOTE: Must use Python2.7 provided by macOS system, i.e., /usr/bin/python
 # Compute per-word entropy for the SWBD_ / BNC_ text_db.csv files
 # Yang Xu
@@ -99,7 +100,7 @@ def crossvalidate(inputfile, outputfile):
 
 ##
 # compute the entropy using LM trained from an external file
-def externalLM(testfile, trainfile, outputfile):
+def externalTrain(testfile, trainfile, outputfile):
     # read text from trainfile, and write to a temporary file
     with open(trainfile, 'r') as fr, open('data/lm/train.txt', 'w') as fw:
         fr.next()
@@ -116,6 +117,35 @@ def externalLM(testfile, trainfile, outputfile):
         raise Exception('trainning failed')
 
     # read text from testfile and compute entropy
+    lm = initLM(3)
+    readLM(lm, lmfile)
+    entropy_results = []
+    with open(testfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            cid, gid, text = int(items[0]), int(items[3]), items[4]
+            try:
+                ppl = getSentencePpl(lm, text, len(text.split()))
+            except Exception as e:
+                print('convId: %s' % cid)
+                print('globalId: %s' % gid)
+                raise
+            else:
+                ent = math.log(ppl, 10)
+                entropy_results.append((cid, gid, ent))
+    # write entropy_results to outputfile
+    with open(outputfile, 'w') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'globalId', 'ent'])
+        for row in entropy_results:
+            csvwriter.writerow(row)
+
+
+##
+# Compute entropy using already trained LM
+def externalLM(testfile, lmfile, outputfile):
+    # load the LM, read text from testfile, and compute entropy
     lm = initLM(3)
     readLM(lm, lmfile)
     entropy_results = []
@@ -242,13 +272,14 @@ if __name__ == '__main__':
     # crossvalidate(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate.csv')
 
     # compute Switchboard using LM trained from BNC
-    # externalLM(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC.csv')
-
+    # externalTrain(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC.csv')
     # compute BNC using LM trained from Switchboard
-    # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
+    # externalTrain(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
 
     # compute entropy using LMs trained from sentences of same position by cross-validation
     # crossvalidate_samepos(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate_samepos.csv')
-    crossvalidate_samepos(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate_samepos.csv')
+    # crossvalidate_samepos(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate_samepos.csv')
 
-    # using LM trained from Penn Treebank WSJ corpus
+    # using LM trained from WSJ corpus
+    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')
+    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/BNC_entropy_fromWSJ.csv')

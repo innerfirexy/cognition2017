@@ -35,10 +35,10 @@ dt = fread('data/SWBD_entropy_fromBNC.csv')
 
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -3.650e-04  3.272e-05  6.264e+04  -11.16   <2e-16 ***
+# globalId    -3.720e-04  3.272e-05  5.571e+04  -11.37   <2e-16 ***
 m = lmer(ent ~ log(globalId) + (1|convId), dt)
 summary(m)
-# log(globalId) -3.225e-02  1.867e-03  1.172e+05  -17.27   <2e-16 ***
+# log(globalId) -3.145e-02  1.872e-03  1.119e+05   -16.8   <2e-16 ***
 
 # plot
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
@@ -51,10 +51,10 @@ dt = fread('data/BNC_entropy_fromSWBD.csv')
 
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -2.878e-04  1.273e-04  3.706e+04  -2.261   0.0238 *
+# globalId    -3.283e-04  1.335e-04  3.289e+04   -2.46   0.0139 *
 m = lmer(ent ~ log(globalId) + (1|convId), dt)
 summary(m)
-# log(globalId) -2.088e-02  3.194e-03  3.195e+04  -6.536 6.41e-11 ***
+# log(globalId) -1.898e-02  3.343e-03  2.906e+04  -5.678 1.37e-08 ***
 
 
 ## Switchboard data trained from LMs of same position
@@ -87,8 +87,31 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
 
 
-##
-# Check old entropy results
+## SWBD trained from WSJ
+dt = fread('data/SWBD_entropy_fromWSJ.csv')
+
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -2.680e-05  2.686e-05  7.969e+04  -0.998    0.318
+m = lmer(ent ~ log(globalId) + (1|convId), dt)
+summary(m)
+# log(globalId) -1.208e-02  1.527e-03  1.283e+05  -7.908 2.66e-15 ***
+
+
+## BNC trained from WSJ
+dt = fread('data/BNC_entropy_fromWSJ.csv')
+
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -1.575e-04  9.340e-05  2.413e+04  -1.686   0.0918 .
+m = lmer(ent ~ log(globalId) + (1|convId), dt)
+summary(m)
+# log(globalId) -9.066e-03  2.336e-03  2.252e+04  -3.882 0.000104 ***
+
+
+
+########
+# Check old entropy results, computed from nltk NgramModel
 dt = fread('data/results_swbd_nltk_CV.csv')
 setnames(dt, c('convId', 'globalId', 'localId', 'ent'))
 m = lmer(ent ~ globalId + (1|convId), dt)
