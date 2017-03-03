@@ -139,6 +139,48 @@ def externalLM(testfile, trainfile, outputfile):
             csvwriter.writerow(row)
 
 
+##
+# compute entropy using 10-fold cross-validation
+# Training text is the set of sentences from the same position (globalId) as test text
+def crossvalidate_samepos(inputfile, outputfile, sentence_n=100):
+    # read all text data
+    alldata = {}
+    with open(inputfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            cid, gid, text = int(items[0]), int(items[3]), items[4]
+            if gid <= sentence_n:
+                if cid in alldata:
+                    alldata[cid][gid] = text
+                else:
+                    alldata[cid] = {gid : text}
+
+    # prepare folds
+    convIds = alldata.keys()
+    shuffle(convIds)
+    foldN = 10
+    foldLen = len(convIds) / foldN
+    foldIds = {}
+    for i in range(0, foldN):
+        if i < foldN-1:
+            foldIds[i] = convIds[i*foldLen : (i+1)*foldLen]
+        else:
+            foldIds[i] = convIds[i*foldLen:]
+
+    # the function that read text from alldata
+    # for a list of convIds, and a given globalId
+    def readtext(data, conv_ids, gid):
+        text = []
+        for cid in conv_ids:
+            if gid in data[cid]:
+                text.append(data[cid][gid])
+        return text
+
+    # conduct cross-validation
+    
+    pass
+
 
 ##
 # main
