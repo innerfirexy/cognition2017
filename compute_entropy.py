@@ -18,7 +18,7 @@ from srilm import *
 
 
 ##
-# compute the entropy of Switchboard by 10-fold cross-validation
+# compute entropy by 10-fold cross-validation
 def crossvalidate(inputfile, outputfile):
     # read all text data
     alldata = {}

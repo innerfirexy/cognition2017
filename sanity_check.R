@@ -81,7 +81,6 @@ summary(m)
 m = lmer(ent ~ log(globalId) + (1|convId), dt)
 summary(m)
 # log(globalId) -9.336e-03  2.242e-03  3.095e+04  -4.165 3.13e-05 ***
-
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
     stat_summary(fun.y = mean, geom = 'line') +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
@@ -107,6 +106,19 @@ summary(m)
 m = lmer(ent ~ log(globalId) + (1|convId), dt)
 summary(m)
 # log(globalId) -9.066e-03  2.336e-03  2.252e+04  -3.882 0.000104 ***
+
+
+## WSJ trained by cross-validation, using SRILM
+dt = fread('data/wsj_entropy.csv')
+
+m = lmer(ent ~ sentId + (1|fileId), dt)
+summary(m)
+# sentId      7.940e-03  1.215e-03 1.118e+04   6.537 6.55e-11 ***
+# Yes, it means that SRILM can correctly replicate the entropy increase reported by Genzel et al 2002 & 2003
+p = ggplot(dt, aes(x=sentId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
 
 
 
