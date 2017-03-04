@@ -133,6 +133,23 @@ summary(m)
 # Maybe, starting from simpler estimation (e.g., unigram) of informaiton content is a good choice!
 
 
+## SWBD infocont by unigram frequency
+# NOTE: this is bad
+dt = fread('data/SWBD_infocont_unifreq.csv')
+m = lmer(infoCont ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -6.718e-05  5.659e-05  8.945e+04  -1.187    0.235
+m = lmer(infoCont ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    -1.179e-03  1.324e-04  1.036e+05  -8.908   <2e-16 ***
+m = lmer(infoCont ~ globalId + (1|convId), dt[globalId<=100 & globalId>=25,])
+summary(m)
+# n.s.
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=infoCont)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+
 
 ########
 # Check old entropy results, computed from nltk NgramModel
@@ -148,3 +165,9 @@ dt[, convId := .GRP, by = .(xmlId, divId)]
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
 # globalId    1.514e-02  8.835e-04 3.547e+04   17.14   <2e-16 ***
+
+## Old train by bin results
+dt = fread('data/results_swbd_nltk_trainByBin.txt')
+setnames(dt, c('globalId', 'localId', 'ent'))
+summary(lm(ent ~ globalId, dt))
+# globalId    0.001531   0.001429   1.071    0.284
