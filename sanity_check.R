@@ -134,7 +134,7 @@ summary(m)
 
 
 ## SWBD infocont by unigram frequency
-# NOTE: this is bad
+# NOTE: unigram information content decrease at first and then do not change
 dt = fread('data/SWBD_infocont_unifreq.csv')
 m = lmer(infoCont ~ globalId + (1|convId), dt)
 summary(m)
@@ -148,6 +148,39 @@ summary(m)
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=infoCont)) +
     stat_summary(fun.y = mean, geom = 'line') +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+
+##
+# NOTE: Entropy does increase with sentence position
+# when we compute sentence entropy correctly. 
+## SWBD infocont by unigram probability, estimated by SRILM
+dt = fread('data/SWBD_infocont_unisrilm.csv')
+m = lmer(infoCont ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    9.060e-04  2.079e-04 5.396e+04   4.359 1.31e-05 ***
+m = lmer(infoCont ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    1.194e-03  4.862e-04 1.035e+05   2.455   0.0141 *
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=infoCont)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+# ppl ~ globalId
+m = lmer(ppl ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    9.829e-02  4.192e-02 2.098e+04   2.345    0.019 *
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ppl)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+# ent ~ globalId
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    4.904e-04  1.569e-04 7.026e+04   3.125  0.00178 **
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
 
 
 
