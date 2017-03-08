@@ -10,37 +10,30 @@ library(lmerTest)
 
 ## Switchboard data trained by cross-validation
 dt = fread('data/SWBD_entropy_crossvalidate.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -4.283e-05  3.129e-05  8.168e+04  -1.369    0.171
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -5.825e-03  1.778e-03  1.295e+05  -3.276  0.00105 **
-
+# globalId    5.510e-04  1.586e-04 7.118e+04   3.475 0.000511 ***
+# NOTE: YES! consistent with the samepos results!
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
 
 ## BNC data trained by cross-validation
 dt = fread('data/BNC_entropy_crossvalidate.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -4.952e-05  1.109e-04  4.158e+04  -0.447    0.655
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -1.047e-02  2.791e-03  3.570e+04  -3.752 0.000176 ***
+# globalId    2.461e-03  9.029e-04 3.849e+04   2.726  0.00642 **
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
 
 
 ## Switchboard data trained from BNC
 dt = fread('data/SWBD_entropy_fromBNC.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -3.720e-04  3.272e-05  5.571e+04  -11.37   <2e-16 ***
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -3.145e-02  1.872e-03  1.119e+05   -16.8   <2e-16 ***
-
-# plot
+# globalId    -5.733e-03  4.817e-04  8.894e+04   -11.9   <2e-16 ***
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
     stat_summary(fun.y = mean, geom = 'line') +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
@@ -48,25 +41,21 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
 
 ## BNC data trained from Switchboard
 dt = fread('data/BNC_entropy_fromSWBD.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -3.283e-04  1.335e-04  3.289e+04   -2.46   0.0139 *
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -1.898e-02  3.343e-03  2.906e+04  -5.678 1.37e-08 ***
+# globalId    2.818e-03  1.827e-03 2.436e+04   1.542    0.123
+p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
 
 
 ## Switchboard data trained from LMs of same position
 dt = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -4.283e-05  3.129e-05  8.168e+04  -1.369    0.171
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) 3.967e-03  2.124e-03 1.036e+05   1.868   0.0618 .
-
+# globalId    1.265e-02  1.232e-03 1.036e+05   10.27   <2e-16 ***
+# NOTE: consistent with nltk results!!
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
     stat_summary(fun.y = mean, geom = 'line') +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
@@ -74,13 +63,9 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
 
 ## BNC data trained from LMs of same position
 dt = fread('data/BNC_entropy_crossvalidate_samepos.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -2.040e-04  8.937e-05  3.546e+04  -2.283   0.0225 *
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -9.336e-03  2.242e-03  3.095e+04  -4.165 3.13e-05 ***
+# globalId    6.802e-02  2.377e-03 4.378e+04   28.61   <2e-16 ***
 p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
     stat_summary(fun.y = mean, geom = 'line') +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
@@ -88,29 +73,20 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
 
 ## SWBD trained from WSJ
 dt = fread('data/SWBD_entropy_fromWSJ.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
 # globalId    -2.680e-05  2.686e-05  7.969e+04  -0.998    0.318
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -1.208e-02  1.527e-03  1.283e+05  -7.908 2.66e-15 ***
 
 
 ## BNC trained from WSJ
 dt = fread('data/BNC_entropy_fromWSJ.csv')
-
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
 # globalId    -1.575e-04  9.340e-05  2.413e+04  -1.686   0.0918 .
-m = lmer(ent ~ log(globalId) + (1|convId), dt)
-summary(m)
-# log(globalId) -9.066e-03  2.336e-03  2.252e+04  -3.882 0.000104 ***
 
 
 ## WSJ trained by cross-validation, using SRILM
 dt = fread('data/wsj_entropy.csv')
-
 m = lmer(ent ~ sentId + (1|fileId), dt)
 summary(m)
 # sentId      7.940e-03  1.215e-03 1.118e+04   6.537 6.55e-11 ***
@@ -152,7 +128,7 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=infoCont)) +
 
 ##
 # NOTE: Entropy does increase with sentence position
-# when we compute sentence entropy correctly. 
+# when we compute sentence entropy correctly.
 ## SWBD infocont by unigram probability, estimated by SRILM
 dt = fread('data/SWBD_infocont_unisrilm.csv')
 m = lmer(infoCont ~ globalId + (1|convId), dt)
