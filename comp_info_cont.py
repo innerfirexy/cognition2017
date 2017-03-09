@@ -256,6 +256,54 @@ def externalTrain(testfile, trainfile, outputfile):
 
 
 ##
+# Compute infomation content using only unigrams existed in the training vocabulary
+def externalTrain_invocab(testfile, trainfile, outputfile):
+    # read text from trainfile, and insert frequency into a dict
+    wordsdict = {}
+    with open(trainfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            for w in items[4].split():
+                if w in wordsdict:
+                    wordsdict[w] += 1
+                else:
+                    wordsdict[w] = 1
+    # get total frequency
+    wordsN = sum(val for val in wordsdict.itervalues())
+    # compute
+    results = []
+    with open(testfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            cid, gid, text = int(items[0]), int(items[3]), items[4]
+            probs = []
+            for w in text.split():
+                if w in wordsdict:
+                    p = float(wordsdict[w]) / wordsN
+                    probs.append(-math.log(p))
+            if len(probs) > 0:
+                ent = sum(probs) / len(probs)
+                results.append((cid, gid, ent, float(len(probs))/len(text.split())))
+            else:
+                results.append((cid, gid, 'NA', 0))
+    # write results to outputfile
+    with open(outputfile, 'w') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'globalId', 'ent', 'inVocabProp'])
+        for row in results:
+            csvwriter.writerow(row)
+
+
+##
+# Train LM using external sentences of same position
+def externalTrain_samepos(testfile, trainfile, outputfile):
+    # TODO
+    pass
+
+
+##
 # Compute entropy using already trained LM
 def externalLM(testfile, lmfile, outputfile):
     # load the LM, read text from testfile, and compute entropy
@@ -281,8 +329,8 @@ def externalLM(testfile, lmfile, outputfile):
 # main
 if __name__ == '__main__':
     # cross-validation
-    crossvalidate(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate.csv')
-    crossvalidate(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate.csv')
+    # crossvalidate(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate.csv')
+    # crossvalidate(inputfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/BNC_entropy_crossvalidate.csv')
 
     # cross-validation by same sentence position
     # crossvalidate_samepos(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_entropy_crossvalidate_samepos.csv')
@@ -291,6 +339,11 @@ if __name__ == '__main__':
     # compute Switchboard using LM trained from BNC, and compute BNC using LM trained from Switchboard
     # externalTrain(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC.csv')
     # externalTrain(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD.csv')
+
+    # compute Switchboard using LM trained from BNC, and compute BNC using LM trained from Switchboard
+    # using invocab unigrams only
+    externalTrain_invocab(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_invocab.csv')
+    externalTrain_invocab(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_invocab.csv')
 
     # using LM trained from WSJ corpus
     # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')

@@ -50,6 +50,28 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
 
 
 
+## Swtichboard trained from BNC, invocab unigrams only
+dt = fread('data/SWBD_entropy_fromBNC_invocab.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -6.678e-04  6.251e-05  6.095e+04  -10.68   <2e-16 ***
+nrow(dt[is.na(ent),])/nrow(dt)
+# only 10% sentences cannot be calculated
+mean(dt$inVocabProp)
+# 82.9%
+
+## BNC trained from Switchboard, invocab unigrams only
+dt = fread('data/BNC_entropy_fromSWBD_invocab.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -9.322e-04  2.718e-04  2.598e+04   -3.43 0.000605 ***
+nrow(dt[is.na(ent),])/nrow(dt)
+# 0.04661983, less than 5%
+mean(dt$inVocabProp)
+# 88.2%
+
+
+
 ## Switchboard data trained from LMs of same position
 dt = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
 m = lmer(ent ~ globalId + (1|convId), dt)
