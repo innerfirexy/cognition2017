@@ -299,8 +299,67 @@ def externalTrain_invocab(testfile, trainfile, outputfile):
 ##
 # Train LM using external sentences of same position
 def externalTrain_samepos(testfile, trainfile, outputfile):
-    # TODO
-    pass
+    # read text from trainfile into a dict
+    # and key is sentence position, and value is text
+    traintext = {}
+    with open(trainfile, 'r') as fr:
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            gid, text = int(items[3]), items[4]
+            if gid in traintext:
+                traintext[gid].append(text)
+            else:
+                traintext[gid] = [text]
+
+    # read text from testfile into a dict
+    # where key is sentence position, and value is a dict {cid -> text}
+    testtext = {}
+    with open(testfile, 'r') as fr:
+        fr.next()
+        fr.next()
+        for line in fr:
+            items = line.strip().split(',')
+            cid, gid, text = int(items[0]), int(items[3]), items[4]
+            if gid in testtext:
+                testtext[gid][cid] = text
+            else:
+                testtext[gid] = {cid: text}
+
+    # train LM and compute entropy
+    results = []
+    for gid in range(1, 101):
+        # train the LM
+        tmpfile = 'data/lm/train.txt'
+        with open(tmpfile, 'w') as fw:
+            for text in traintext[gid]:
+                fw.write(text + '\n')
+        lmfile = 'data/lm/train.lm'
+        srilm_dir = '/Users/yangxu/projects/srilm-1.7.1/bin/macosx/'
+        train_cmd = [srilm_dir + 'ngram-count', '-order', '3', '-text', tmpfile, '-lm', lmfile]
+        FNULL = open(os.devnull, 'w') # suppress stdout and stderr
+        return_code = subprocess.check_call(train_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+        if return_code != 0:
+            raise Exception('trainning failed')
+        # compute
+        lm = initLM(3)
+        readLM(lm, lmfile)
+        for cid, text in testtext[gid].iteritems():
+            ent = sentence_entropy(lm, text)
+            results.append((cid, gid, ent))
+        # print progress
+        sys.stdout.write('\r%s/%s sentence positions done' % (gid, 100))
+        sys.stdout.flush()
+
+    # write results to outputfile
+    with open(outputfile, 'w') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'globalId', 'ent'])
+        for row in results:
+            csvwriter.writerow(row)
+    # print
+    print('\nDone for %s' % testfile)
+
 
 
 ##
@@ -342,8 +401,13 @@ if __name__ == '__main__':
 
     # compute Switchboard using LM trained from BNC, and compute BNC using LM trained from Switchboard
     # using invocab unigrams only
-    externalTrain_invocab(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_invocab.csv')
-    externalTrain_invocab(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_invocab.csv')
+    # externalTrain_invocab(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_invocab.csv')
+    # externalTrain_invocab(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_invocab.csv')
+
+    # compute Switchboard using LM trained from BNC, and compute BNC using LM trained from Switchboard
+    # using sentences from same position
+    externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_samepos.csv')
+    externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_samepos.csv')
 
     # using LM trained from WSJ corpus
     # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')

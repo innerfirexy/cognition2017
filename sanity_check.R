@@ -71,6 +71,20 @@ mean(dt$inVocabProp)
 # 88.2%
 
 
+## Swtichboard trained from BNC, using sentence from same positions
+dt = fread('data/SWBD_entropy_fromBNC_samepos.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    2.383e-02  1.830e-03 1.036e+05   13.02   <2e-16 ***
+
+## BNC trained from Switchboard, using sentence from same positions
+dt = fread('data/BNC_entropy_fromSWBD_samepos.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    9.522e-03  2.858e-03 2.999e+04   3.332 0.000864 ***
+# NOTE: this is what we want
+
+
 
 ## Switchboard data trained from LMs of same position
 dt = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
