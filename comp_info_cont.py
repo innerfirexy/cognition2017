@@ -414,5 +414,9 @@ if __name__ == '__main__':
     # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/BNC_entropy_fromWSJ.csv')
 
     # Using external LM trained from WSJ, using sentences from same position
-    externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/SWBD_entropy_fromWSJ_samepos.csv')
-    externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/BNC_entropy_fromWSJ_samepos.csv')
+    # externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/SWBD_entropy_fromWSJ_samepos.csv')
+    # externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/BNC_entropy_fromWSJ_samepos.csv')
+
+    # using LM trianed from CSN
+    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/SWBD_entropy_fromCSN.csv')
+    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/BNC_entropy_fromCSN.csv')

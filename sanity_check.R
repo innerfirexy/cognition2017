@@ -136,6 +136,22 @@ summary(m)
 # globalId    -3.096e-01  4.525e-02  1.132e+04  -6.843 8.18e-12 ***
 
 
+## SWBD and BNC trained from CSN
+dt = fread('data/SWBD_entropy_fromCSN.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    -1.453e-02  1.004e-03  1.036e+05  -14.47   <2e-16 ***
+
+dt = fread('data/BNC_entropy_fromCSN.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    8.463e-04  5.454e-04 2.728e+04   1.552    0.121
+# NOTE: n.s., but the trend holds
+p = ggplot(dt, aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+
 
 ## WSJ trained by cross-validation, using SRILM
 dt = fread('data/wsj_entropy.csv')
