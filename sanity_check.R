@@ -111,14 +111,30 @@ p = ggplot(dt[globalId<=100,], aes(x=globalId, y=ent)) +
 dt = fread('data/SWBD_entropy_fromWSJ.csv')
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -2.680e-05  2.686e-05  7.969e+04  -0.998    0.318
-
+# globalId    -7.569e-03  5.535e-04  9.171e+04  -13.68   <2e-16 ***
 
 ## BNC trained from WSJ
 dt = fread('data/BNC_entropy_fromWSJ.csv')
 m = lmer(ent ~ globalId + (1|convId), dt)
 summary(m)
-# globalId    -1.575e-04  9.340e-05  2.413e+04  -1.686   0.0918 .
+# globalId    1.586e-03  1.601e-03 2.840e+04   0.991    0.322
+# n.s.
+
+
+## SWBD and BNC trained from WSJ, with sentences of same position
+dt = fread('data/SWBD_entropy_fromWSJ_samepos.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId      -0.18219    0.05183 9910.00000  -3.515 0.000441 ***
+p = ggplot(dt, aes(x=globalId, y=ent)) +
+    stat_summary(fun.y = mean, geom = 'line') +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
+
+dt = fread('data/BNC_entropy_fromWSJ_samepos.csv')
+m = lmer(ent ~ globalId + (1|convId), dt)
+summary(m)
+# globalId    -3.096e-01  4.525e-02  1.132e+04  -6.843 8.18e-12 ***
+
 
 
 ## WSJ trained by cross-validation, using SRILM

@@ -406,9 +406,13 @@ if __name__ == '__main__':
 
     # compute Switchboard using LM trained from BNC, and compute BNC using LM trained from Switchboard
     # using sentences from same position
-    externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_samepos.csv')
-    externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_samepos.csv')
+    # externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_entropy_fromBNC_samepos.csv')
+    # externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/SWBD_text_db.csv', outputfile='data/BNC_entropy_fromSWBD_samepos.csv')
 
     # using LM trained from WSJ corpus
     # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/SWBD_entropy_fromWSJ.csv')
     # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/wsj_gt10_text.lm', outputfile='data/BNC_entropy_fromWSJ.csv')
+
+    # Using external LM trained from WSJ, using sentences from same position
+    externalTrain_samepos(testfile='data/SWBD_text_db.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/SWBD_entropy_fromWSJ_samepos.csv')
+    externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/BNC_entropy_fromWSJ_samepos.csv')
