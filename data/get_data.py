@@ -1,16 +1,19 @@
+#!/usr/local/bin/python3
 # Get data from database
 # Yang Xu
 # 2/22/2017
 
 import MySQLdb
 import csv
+import sys
+import string
 
 # get db connection
 def db_conn(db_name):
     # db init: ssh yvx5085@brain.ist.psu.edu -i ~/.ssh/id_rsa -L 1234:localhost:3306
     conn = MySQLdb.connect(host = "127.0.0.1",
                     user = "yang",
-                    port = 1234,
+                    port = 3306,
                     passwd = "05012014",
                     db = db_name)
     return conn
@@ -107,6 +110,52 @@ def select_BNC_textfull():
     conn.close()
 
 
+##
+# Get text from CSN db as training corpus
+def select_CSN():
+    conn = db_conn('csn')
+    cur = conn.cursor()
+    sql = 'select tokenized from csntokenizednew where tokenized <> \"\"'
+    cur.execute(sql)
+    data = cur.fetchall()
+    with open('CSN_text.txt', 'w') as f:
+        for i, row in enumerate(data):
+            text = row[0]
+            # remove double quotes
+            text = text[1:-1]
+            # split
+            tokens = text.split('^^~^^')
+            # traverse tokens and form sentences by detecting sentence-ending symbols
+            # and omit punctuations in the middle of a sentence
+            end_puncts = ['.', '?', '!']
+            other_puncts = [p for p in list(string.punctuation) if p not in end_puncts]
+            sent = []
+            for j, t in enumerate(tokens):
+                if j == len(tokens)-1:
+                    if t in other_puncts:
+                        if len(sent) > 0:
+                            f.write(' '.join(sent) + '\n')
+                    elif t in end_puncts:
+                        if len(sent) > 0:
+                            f.write(' '.join(sent) + '\n')
+                    else:
+                        sent.append(t.lower())
+                        f.write(' '.join(sent) + '\n')
+                else:
+                    if t in other_puncts:
+                        continue
+                    elif t in end_puncts:
+                        if len(sent) > 0:
+                            f.write(' '.join(sent) + '\n')
+                            sent = []
+                    else:
+                        sent.append(t.lower())
+            # print process
+            if (i+1) % 1000 == 0:
+                sys.stdout.write('\r{}/{} rows written'.format(i+1, len(data)))
+                sys.stdout.flush()
+
+
 
 ##
 # main
@@ -114,5 +163,6 @@ if __name__ == '__main__':
     # select_SWBD_entropy()
     # select_SWBD_text()
     # select_BNC_entropy()
-    select_BNC_text100()
-    select_BNC_textfull()
+    # select_BNC_text100()
+    # select_BNC_textfull()
+    select_CSN()
