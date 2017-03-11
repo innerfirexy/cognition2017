@@ -174,7 +174,7 @@ def select_BNC_written():
 ##
 # select disfluencies-removed Switchboard text from db
 def select_SWBD_disf():
-    conn = db_conn('bnc')
+    conn = db_conn('swbd')
     cur = conn.cursor()
     sql = 'select convID, turnID, speaker, globalID, rawWord from entropy_disf where rawWord <> \"\"'
     cur.execute(sql)
