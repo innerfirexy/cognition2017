@@ -156,6 +156,20 @@ def select_CSN():
                 sys.stdout.flush()
 
 
+##
+# select BNC written text data from db
+def select_BNC_written():
+    conn = db_conn('bnc')
+    cur = conn.cursor()
+    sql = 'select rawWord from entropy_nsp where rawWord <> \"\"'
+    cur.execute(sql)
+    data = cur.fetchall()
+    with open('BNC_writtentext_db.txt', 'w') as f:
+        for row in data:
+            text = row[0]
+            f.write(text.lower() + '\n')
+
+
 
 ##
 # main
@@ -165,4 +179,5 @@ if __name__ == '__main__':
     # select_BNC_entropy()
     # select_BNC_text100()
     # select_BNC_textfull()
-    select_CSN()
+    # select_CSN()
+    select_BNC_written()
