@@ -165,6 +165,35 @@ summary(m)
 
 
 
+##
+# For Switchboard disfluencies-removed text
+# from CSN
+dt = fread('data/SWBD_disfrmvd_entropy_fromCSN.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    -7.087e-05  4.027e-04  3.730e+04  -0.176     0.86
+
+# from BNC
+dt = fread('data/SWBD_disfrmvd_entropy_fromBNC.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    -1.437e-03  1.104e-03  3.727e+04  -1.301    0.193
+
+# cross-validation
+dt = fread('data/SWBD_disfrmvd_entropy_crossvalidate.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    5.620e-03  7.467e-04 3.731e+04   7.527 5.33e-14 ***
+# NOTE: significant increase
+
+# cross-validation same position
+dt = fread('data/SWBD_disfrmvd_entropy_crossvalidate_samepos.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    4.038e-02  2.254e-03 3.734e+04   17.92   <2e-16 ***
+# NOTE: significant increase
+
+
 
 ## WSJ trained by cross-validation, using SRILM
 dt = fread('data/wsj_entropy.csv')

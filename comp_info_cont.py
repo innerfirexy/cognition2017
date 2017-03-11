@@ -422,5 +422,15 @@ if __name__ == '__main__':
     # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/BNC_entropy_fromCSN.csv')
 
     # using LM trained from BNC written text db
-    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/SWBD_entropy_fromBNCwrittendb.csv')
-    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/BNC_entropy_fromBNCwrittendb.csv')
+    # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/SWBD_entropy_fromBNCwrittendb.csv')
+    # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/BNC_entropy_fromBNCwrittendb.csv')
+
+    ##
+    # Swichboard disfluencies-removed text trained on CSN
+    externalLM(testfile='data/SWBD_text_disfrmvd.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/SWBD_disfrmvd_entropy_fromCSN.csv')
+    # Swichboard disfluencies-removed text trained on BNC
+    externalTrain(testfile='data/SWBD_text_disfrmvd.csv', trainfile='data/BNC_text_db100_mlrcut.csv', outputfile='data/SWBD_disfrmvd_entropy_fromBNC.csv')
+    # Swichboard disfluencies-removed text cross-validation
+    crossvalidate(inputfile='data/SWBD_text_disfrmvd.csv', outputfile='data/SWBD_disfrmvd_entropy_crossvalidate.csv')
+    # Swichboard disfluencies-removed text cross-validation same position
+    crossvalidate_samepos(inputfile='data/SWBD_text_disfrmvd.csv', outputfile='data/SWBD_disfrmvd_entropy_crossvalidate_samepos.csv')
