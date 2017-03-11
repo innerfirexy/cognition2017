@@ -418,5 +418,9 @@ if __name__ == '__main__':
     # externalTrain_samepos(testfile='data/BNC_text_db100_mlrcut.csv', trainfile='data/lm/wsj_gt10_full_addblank.csv', outputfile='data/BNC_entropy_fromWSJ_samepos.csv')
 
     # using LM trianed from CSN
-    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/SWBD_entropy_fromCSN.csv')
-    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/BNC_entropy_fromCSN.csv')
+    # externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/SWBD_entropy_fromCSN.csv')
+    # externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/CSN_order3.lm', outputfile='data/BNC_entropy_fromCSN.csv')
+
+    # using LM trained from BNC written text db
+    externalLM(testfile='data/SWBD_text_db.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/SWBD_entropy_fromBNCwrittendb.csv')
+    externalLM(testfile='data/BNC_text_db100_mlrcut.csv', lmfile='data/lm/BNC_writtentext_db_order3.lm', outputfile='data/BNC_entropy_fromBNCwrittendb.csv')

@@ -152,6 +152,19 @@ p = ggplot(dt, aes(x=globalId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha=.5)
 
 
+## SWBD and BNC trained from BNC written db
+dt = fread('data/SWBD_entropy_fromBNCwrittendb.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    -1.979e-02  1.307e-03  1.036e+05  -15.14   <2e-16 ***
+
+dt = fread('data/BNC_entropy_fromBNCwrittendb.csv')
+m = lmer(ent ~ globalId + (1|convId), dt[globalId<=100,])
+summary(m)
+# globalId    1.220e-03  1.331e-03 2.798e+04   0.916     0.36
+
+
+
 
 ## WSJ trained by cross-validation, using SRILM
 dt = fread('data/wsj_entropy.csv')
