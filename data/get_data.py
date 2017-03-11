@@ -154,6 +154,7 @@ def select_CSN():
             if (i+1) % 1000 == 0:
                 sys.stdout.write('\r{}/{} rows written'.format(i+1, len(data)))
                 sys.stdout.flush()
+    conn.close()
 
 
 ##
@@ -168,6 +169,22 @@ def select_BNC_written():
         for row in data:
             text = row[0]
             f.write(text.lower() + '\n')
+    conn.close()
+
+##
+# select disfluencies-removed Switchboard text from db
+def select_SWBD_disf():
+    conn = db_conn('bnc')
+    cur = conn.cursor()
+    sql = 'select convID, turnID, speaker, globalID, rawWord from entropy_disf where rawWord <> \"\"'
+    cur.execute(sql)
+    data = cur.fetchall()
+    with open('SWBD_text_disfrmvd.csv', 'w', newline='') as fw:
+        csvwriter = csv.writer(fw, delimiter=',')
+        csvwriter.writerow(['convId', 'turnId', 'speaker', 'globalId', 'rawWord'])
+        for row in data:
+            csvwriter.writerow(row)
+    conn.close()
 
 
 
@@ -180,4 +197,5 @@ if __name__ == '__main__':
     # select_BNC_text100()
     # select_BNC_textfull()
     # select_CSN()
-    select_BNC_written()
+    # select_BNC_written()
+    select_SWBD_disf()

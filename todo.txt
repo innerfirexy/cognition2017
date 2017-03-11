@@ -1,3 +1,2 @@
-- Train LM using BNC written part and test it on BNC spoken.
-
+- Switchboard with disfluencies removed
 - Test Map Task and Danish Map Task, and the other Danish corpus.
