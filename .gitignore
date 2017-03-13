@@ -8,3 +8,4 @@ __pycache__
 data/*.csv
 data/*.txt
 data/lm
+data/tmp
