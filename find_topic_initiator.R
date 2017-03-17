@@ -162,3 +162,71 @@ m = lmer(ent ~ inTopicId + (1|convId), dt.found)
 summary(m)
 # inTopicId   -1.235e-03  5.162e-04  4.963e+04  -2.393   0.0167 *
 # NOTE: entropy decreases with inTopicId
+
+
+##
+# find topic initiators for SWBD_entropy_db_dpconfig.csv
+dt = fread('data/SWBD_entropy_db_dpconfig.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   -6.610e-03  7.489e-04  3.602e+04  -8.825   <2e-16 ***
+# NOTE: entropy decreases with inTopicId
+
+
+##
+# find topic initiators for SWBD_entropy_crossvalidate_dpconfig.csv
+dt = fread('data/SWBD_entropy_crossvalidate_dpconfig.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   -1.883e-03  3.282e-04  5.669e+04  -5.739 9.56e-09 ***
+# NOTE: entropy decreases with inTopicId
+
+
+##
+# find topic initiators for SWBD_entropy_crossvalidate_samepos_dpconfig.csv
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_dpconfig.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   -1.139e-02  1.901e-03  4.036e+04  -5.994 2.07e-09 ***
+# NOTE: entropy decreases with inTopicId
+m = lmer(ent ~ inTopicId + (1|convId), dt.found[inTopicId<=4,])
+summary(m)

@@ -14,7 +14,7 @@ combineTopic = function(d1, d2) {
     # combine
     setkey(d1, convId, globalId)
     setkey(d2, convId, globalId)
-    d.comb = d1[d2[, .(convId, globalId, speaker, wordNum, topicId, inTopicId)],]
+    d.comb = d1[, .(convId, globalId, ent)][d2[, .(convId, globalId, speaker, wordNum, topicId, inTopicId)],]
     d.comb
 }
 
@@ -41,3 +41,25 @@ d1 = fread('data/BNC_entropy_fromSWBD.csv')
 d2 = fread('data/BNC_entropy_db.csv')
 d = combineTopic(d1, d2)
 fwrite(d, 'data/BNC_entropy_fromSWBD_topic.csv')
+
+
+##
+# combine SWBD entropy db with topic ids from dp.config
+d1 = fread('data/SWBD_entropy_db.csv')
+d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_db_dpconfig.csv')
+
+##
+# combine SWBD entropy cross-validation with topic ids from dp.config
+d1 = fread('data/SWBD_entropy_crossvalidate.csv')
+d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_crossvalidate_dpconfig.csv')
+
+##
+# combine SWBD entropy cross-validation samepos with topic ids from dp.config
+d1 = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
+d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_crossvalidate_samepos_dpconfig.csv')
