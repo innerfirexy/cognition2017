@@ -17,7 +17,7 @@ def conduct_segment(inputlist, config = 'dp.config'):
     # sentence positions
     """
     inputlist: a list of str
-    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.confi']
+    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.config']
     """
     assert config in ['dp.config', 'cue.config', 'mcsopt.ai.config']
 
@@ -142,9 +142,16 @@ if __name__ == '__main__':
     # test1()
     # test2()
 
-    # segment SWBD
+    # segment SWBD, using dp.config
     # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_dp.csv', config='dp.config')
 
-    # segment BNC of full length
-    # eplase 12 min
-    seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_dp.csv', config='dp.config')
+    # segment BNC of full length, using dp.config
+    # seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_dp.csv', config='dp.config')
+    # elapse 12 min
+
+    # segment SWBD, using mcsopt.ai.config
+    # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_mcsopt.csv', config='mcsopt.ai.config')
+
+    # segment BNC, using mcsopt.ai.config
+    seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_mcsopt.csv', config='mcsopt.ai.config')
+    # elapse 7:25.81 total

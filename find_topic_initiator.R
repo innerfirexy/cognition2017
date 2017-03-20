@@ -102,7 +102,7 @@ summary(m)
 # find topic initiators for BNC_entropy_crossvalidate_topic.csv
 dt = fread('data/BNC_entropy_crossvalidate_topic.csv')
 setkey(dt, convId, topicId)
-dt.found = dt[findInitiators(dt, thrhld=9), nomatch=0]
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
 # plot
 dt.found[, group := 'initiator']
 dt.found[speaker != initiator, group := 'responder']
@@ -273,4 +273,71 @@ p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)
 m = lmer(ent ~ inTopicId + (1|convId), dt.found)
 summary(m)
 # inTopicId   2.541e-02  4.180e-03 3.770e+04   6.079 1.22e-09 ***
+# NOTE: entropy increases with inTopicId
+
+
+##
+# find topic initiators for SWBD_entropy_crossvalidate_samepos_mcsopt.csv
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_mcsopt.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   7.713e-03  1.819e-03 6.300e+04    4.24 2.23e-05 ***
+# NOTE: entropy increases with inTopicId
+
+
+##
+# find topic initiators for BNC_entropy_crossvalidate_samepos_mcsopt.csv
+dt = fread('data/BNC_entropy_crossvalidate_samepos_mcsopt.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# NOTE: in MinCut, we do not see a decrease in topic initiator 
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   5.730e-02  3.821e-03 4.205e+04   15.00   <2e-16 ***
+# NOTE: entropy increases with inTopicId
+
+
+##
+# find topic initiators for BNC_entropy_crossvalidate_samepos_tt.csv
+dt = fread('data/BNC_entropy_crossvalidate_samepos_tt.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   4.128e-02  9.676e-03 5.157e+04   4.266    2e-05 ***
 # NOTE: entropy increases with inTopicId
