@@ -74,21 +74,31 @@ def seg_textdata(inputfile, outputfile, config = 'dp.config'):
     if 'wordNum' not in df.columns:
         df['wordNum'] = df.rawWord.apply(lambda x: len(x.split()))
 
+    ##
+    # handle special cases (dialogues that are too short) for BNC
+    if inputfile == 'data/BNC_text_dbfull_mlrcut.csv':
+        df_ref = pd.read_csv('data/BNC_convs_gt10sents.csv')
+        included_cids = df_ref.convId.unique()
+        df = df[df.convId.isin(included_cids)]
+        # remove NaNs in rawWord
+        df = df[df.rawWord.notnull()]
+
+
     # call conduct_segment for each convId
     df_ids = pd.DataFrame()
     for i, cid in enumerate(df.convId.unique()):
         sentlist = list(df[df.convId == cid].rawWord)
-        res = conduct_segment(inputlist=sentlist, config=config)
+        try:
+            res = conduct_segment(inputlist=sentlist, config=config)
+        except Exception as e:
+            print('problematic convId: {}'.format(cid))
+            print('length of sentlist: {}'.format(len(sentlist)))
+            raise
         ids = make_topic_ids(res)
         df_tmp = pd.DataFrame(ids)
         # DEBUG code
         if df_tmp.shape[0] != df[df.convId == cid].shape[0]:
             raise Exception('inconsistent length')
-        #     # print('inconsistent_count: {}'.format(inconsistent_count))
-        #     # print('len(sentlist)=={0}, nrow(df_tmp)=={1}'.format(len(sentlist), df_tmp.shape[0]))
-        #     # print(df_tmp.tail(2).topicId)
-        #     print(res)
-        #     print('len(sentlist)=={}'.format(len(sentlist)))
         # end DEBUG
         # combine
         df_ids = pd.concat([df_ids, df_tmp], axis=0)
@@ -100,7 +110,7 @@ def seg_textdata(inputfile, outputfile, config = 'dp.config'):
     tmpfile = inputfile[:-4] + '_ids.csv'
     df_ids.to_csv(tmpfile, sep=',', index=False)
     # combine df and df_ids
-    df1 = pd.concat([df, df_ids.reset_index(drop=True)], axis=1) # reset_index is necessary
+    df1 = pd.concat([df.reset_index(drop=True), df_ids.reset_index(drop=True)], axis=1) # reset_index is necessary
     df1.to_csv(outputfile, sep=',', index=False)
 
 
@@ -133,4 +143,8 @@ if __name__ == '__main__':
     # test2()
 
     # segment SWBD
-    seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_dpconfig.csv', config='dp.config')
+    # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_dp.csv', config='dp.config')
+
+    # segment BNC of full length
+    # eplase 12 min
+    seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_dp.csv', config='dp.config')

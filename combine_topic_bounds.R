@@ -46,20 +46,34 @@ fwrite(d, 'data/BNC_entropy_fromSWBD_topic.csv')
 ##
 # combine SWBD entropy db with topic ids from dp.config
 d1 = fread('data/SWBD_entropy_db.csv')
-d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d2 = fread('data/SWBD_text_db_dp.csv')
 d = combineTopic(d1, d2)
-fwrite(d, 'data/SWBD_entropy_db_dpconfig.csv')
+fwrite(d, 'data/SWBD_entropy_db_dp.csv')
 
 ##
 # combine SWBD entropy cross-validation with topic ids from dp.config
 d1 = fread('data/SWBD_entropy_crossvalidate.csv')
-d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d2 = fread('data/SWBD_text_db_dp.csv')
 d = combineTopic(d1, d2)
-fwrite(d, 'data/SWBD_entropy_crossvalidate_dpconfig.csv')
+fwrite(d, 'data/SWBD_entropy_crossvalidate_dp.csv')
 
 ##
 # combine SWBD entropy cross-validation samepos with topic ids from dp.config
 d1 = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
-d2 = fread('data/SWBD_text_db_dpconfig.csv')
+d2 = fread('data/SWBD_text_db_dp.csv')
 d = combineTopic(d1, d2)
-fwrite(d, 'data/SWBD_entropy_crossvalidate_samepos_dpconfig.csv')
+fwrite(d, 'data/SWBD_entropy_crossvalidate_samepos_dp.csv')
+
+##
+# combine BNC entropy cross-validation with topic ids from dp.config
+d1 = fread('data/BNC_entropy_crossvalidate.csv')
+d2 = fread('data/BNC_text_dbfull_mlrcut_dp.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/BNC_entropy_crossvalidate_dp.csv')
+
+##
+# combine BNC entropy cross-validation samepos with topic ids from dp.config
+d1 = fread('data/BNC_entropy_crossvalidate_samepos.csv')
+d2 = fread('data/BNC_text_dbfull_mlrcut_dp.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/BNC_entropy_crossvalidate_samepos_dp.csv')
