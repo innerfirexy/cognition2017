@@ -12,7 +12,10 @@ library(ggalt)
 
 
 # LLA function
-LLA = function(prime, target) {
+LLA = function(prime, target, normalizer='sum') {
+    # examine arguments
+    stopifnot(normalizer %in% c('sum', 'prod', 'sqrtprod'))
+
     if (length(prime)==0 | length(target)==0) {
         return(NaN)
     }
@@ -22,7 +25,11 @@ LLA = function(prime, target) {
             repeatcount = repeatcount + 1
         }
     }
-    repeatcount / (length(prime) + length(target))
+    switch(normalizer,
+        sum = repeatcount / (length(prime) + length(target)),
+        prod = repeatcount / (length(prime) * length(target)),
+        sqrtprod = repeatcount / sqrt(length(prime) + length(target))
+        )
 }
 
 # the function that computes LLA (local linguistic alignment) between speaking turns
@@ -44,21 +51,29 @@ compute_LLA_sumLen = function(data) {
     d.align = d2[, {
             currWords = str_split(turnText, ' ')[[1]]
             if (is.na(prevConvId[.GRP])) {
-                lla = NaN
+                lla_sum = NaN
+                lla_prod = NaN
+                lla_sqrtprod = NaN
                 sumLen = NaN
             } else if (convId != prevConvId[.GRP]) {
-                lla = NaN
+                lla_sum = NaN
+                lla_prod = NaN
+                lla_sqrtprod = NaN
                 sumLen = NaN
             } else if (speaker == prevSpeaker[.GRP]) {
-                lla = NaN
+                lla_sum = NaN
+                lla_prod = NaN
+                lla_sqrtprod = NaN
                 sumLen = NaN
             } else {
                 prime = str_split(prevTurnText[.GRP], ' ')[[1]]
                 target = str_split(turnText, ' ')[[1]]
-                lla = LLA(prime, target)
+                lla_sum = LLA(prime, target, normalizer='sum')
+                lla_prod = LLA(prime, target, normalizer='prod')
+                lla_sqrtprod = LLA(prime, target, normalizer='sqrtprod')
                 sumLen = as.numeric(length(prime) + length(target))
             }
-            .(lla = lla, sumLen = sumLen)
+            .(lla_sum = lla_sum, lla_prod = lla_prod, lla_sqrtprod = lla_sqrtprod, sumLen = sumLen)
         }, by = .(convId, turnId)]
     d.align
 }
@@ -69,22 +84,38 @@ compute_LLA_sumLen = function(data) {
 dt.swbd = fread('data/SWBD_text_db.csv')
 setkey(dt.swbd, convId)
 
-dt.swbd.align = compute_LLA_sumLen(dt.swbd)
+system.time(dt.swbd.align <- compute_LLA_sumLen(dt.swbd)) # elapsed 27.734 sec
 
 # compute the mean lla for each sumLen level
 setkey(dt.swbd.align, sumLen)
-dt.swbd.align.mean = dt.swbd.align[, {.(llaMean = mean(lla[!is.nan(lla)]))}, by = sumLen]
-# join `llaMean` column back to dt.swbd.align
+dt.swbd.align.mean = dt.swbd.align[, {
+    .(lla_sum_mean = mean(lla_sum[!is.nan(lla_sum)]),
+      lla_prod_mean = mean(lla_prod[!is.nan(lla_prod)]),
+      lla_sqrtprod_mean = mean(lla_sqrtprod[!is.nan(lla_sqrtprod)]))
+    }, by = sumLen]
+# join `lla_*_mean` columns back to dt.swbd.align
 dt.swbd.align = dt.swbd.align[dt.swbd.align.mean, nomatch = 0]
 # compute the normalized lla
-dt.swbd.align[, llaNorm := lla / llaMean]
+dt.swbd.align[, lla_sum_norm := lla_sum / lla_sum_mean][, lla_prod_norm := lla_prod / lla_prod_mean][, lla_sqrtprod_norm := lla_sqrtprod / lla_sqrtprod_mean]
 
 ##
-# Use models to check how llaNorm changes within dialogue and topic episode
-m = lmer(llaNorm ~ turnId + (1|convId), dt.swbd.align)
+# Use models to check how lla_*_norm changes within dialogue and topic episode
+m = lmer(lla_sum_norm ~ turnId + (1|convId), dt.swbd.align)
 summary(m)
 # turnId      8.265e-04  1.555e-04 4.929e+04   5.316 1.07e-07 ***
 # Yes! Alignment actually increases along dialogue
+
+m = lmer(lla_prod_norm ~ turnId + (1|convId), dt.swbd.align)
+summary(m)
+# turnId      8.048e-04  1.517e-04 4.299e+04   5.305 1.13e-07 ***
+
+m = lmer(lla_sqrtprod_norm ~ turnId + (1|convId), dt.swbd.align)
+summary(m)
+# turnId      8.265e-04  1.555e-04 4.929e+04   5.316 1.07e-07 ***
+
+##
+# check how lla_* (w/o normalizing) change within dialogue
+
 
 # Read topic information data and join with alignment data
 dt.swbd.topic = fread('data/SWBD_entropy_db.csv')
