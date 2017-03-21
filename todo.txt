@@ -1,2 +1,4 @@
-- Switchboard with disfluencies removed
 - Test Map Task and Danish Map Task, and the other Danish corpus.
+
+- evaluate corpus perplexity
+    and also out-of-vocab numbers

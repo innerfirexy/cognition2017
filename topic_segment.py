@@ -17,9 +17,9 @@ def conduct_segment(inputlist, config = 'dp.config'):
     # sentence positions
     """
     inputlist: a list of str
-    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.config']
+    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.config', 'ui.config']
     """
-    assert config in ['dp.config', 'cue.config', 'mcsopt.ai.config']
+    assert config in ['dp.config', 'cue.config', 'mcsopt.ai.config', 'ui.config']
 
     # save inputlist to a temporary file
     tmp_file = 'data/tmp/text_to_seg.txt'
@@ -33,9 +33,14 @@ def conduct_segment(inputlist, config = 'dp.config'):
     proc = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
     try:
-        last = proc.stdout.readlines()[-1].strip().decode('utf-8')
+        output = proc.stdout.readlines()
+        last = output[-1].strip().decode('utf-8')
         res = ast.literal_eval(last)
     except Exception as e:
+        print('Last line of output: \n{}'.format(last))
+        print('All output: \n')
+        for line in output:
+            print(line)
         raise
     else:
         return res
@@ -61,9 +66,9 @@ def make_topic_ids(bound_ind):
 # segment text data file: 'data/SWBD_text_db.csv', 'data/BNC_text_db100.csv', & 'data/BNC_text_dbfull.csv'
 def seg_textdata(inputfile, outputfile, config = 'dp.config'):
     """
-    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.confi']
+    config: one of ['dp.config', 'cue.config', 'mcsopt.ai.confi', 'ui.config']
     """
-    assert config in ['dp.config', 'cue.config', 'mcsopt.ai.config']
+    assert config in ['dp.config', 'cue.config', 'mcsopt.ai.config', 'ui.config']
 
     # read textdata into a pandas dataframe
     df = pd.read_csv(inputfile)
@@ -98,6 +103,9 @@ def seg_textdata(inputfile, outputfile, config = 'dp.config'):
         df_tmp = pd.DataFrame(ids)
         # DEBUG code
         if df_tmp.shape[0] != df[df.convId == cid].shape[0]:
+            print('df_tmp.shape[0] == {}'.format(df_tmp.shape[0]))
+            print('res:\n{}'.format(res))
+            print('ids:\n{}'.format(ids))
             raise Exception('inconsistent length')
         # end DEBUG
         # combine
@@ -145,7 +153,7 @@ if __name__ == '__main__':
     # segment SWBD, using dp.config
     # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_dp.csv', config='dp.config')
 
-    # segment BNC of full length, using dp.config
+    # segment BNC, using dp.config
     # seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_dp.csv', config='dp.config')
     # elapse 12 min
 
@@ -153,5 +161,11 @@ if __name__ == '__main__':
     # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_mcsopt.csv', config='mcsopt.ai.config')
 
     # segment BNC, using mcsopt.ai.config
-    seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_mcsopt.csv', config='mcsopt.ai.config')
+    # seg_textdata(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_mcsopt.csv', config='mcsopt.ai.config')
     # elapse 7:25.81 total
+
+    # segment SWBD using cue.config, DO NOT work
+    # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_cue.csv', config='cue.config')
+
+    # segment SWBD using ui.config, DO NOT work
+    # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_ui.csv', config='ui.config')

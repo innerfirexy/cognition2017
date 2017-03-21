@@ -188,7 +188,7 @@ summary(m)
 
 ##
 # find topic initiators for SWBD_entropy_crossvalidate_dp.csv
-dt = fread('data/SWBD_entropy_crossvalidate_dpconfig.csv')
+dt = fread('data/SWBD_entropy_crossvalidate_dp.csv')
 setkey(dt, convId, topicId)
 dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
 # plot
@@ -210,7 +210,7 @@ summary(m)
 
 ##
 # find topic initiators for SWBD_entropy_crossvalidate_samepos_dp.csv
-dt = fread('data/SWBD_entropy_crossvalidate_samepos_dpconfig.csv')
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_dp.csv')
 setkey(dt, convId, topicId)
 dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
 # plot
@@ -313,7 +313,7 @@ p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)
     scale_x_continuous(breaks = 1:10) +
     theme(legend.position = c(.75, .2)) +
     xlab('within-episode position') + ylab('entropy')
-# NOTE: in MinCut, we do not see a decrease in topic initiator 
+# NOTE: in MinCut, we do not see a decrease in topic initiator
 # model test if entropy increases within topic episode
 m = lmer(ent ~ inTopicId + (1|convId), dt.found)
 summary(m)
