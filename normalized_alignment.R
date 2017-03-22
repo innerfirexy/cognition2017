@@ -28,7 +28,7 @@ LLA = function(prime, target, normalizer='sum') {
     switch(normalizer,
         sum = repeatcount / (length(prime) + length(target)),
         prod = repeatcount / (length(prime) * length(target)),
-        sqrtprod = repeatcount / sqrt(length(prime) + length(target))
+        sqrtprod = repeatcount / sqrt(length(prime) * length(target))
         )
 }
 
@@ -111,10 +111,19 @@ summary(m)
 
 m = lmer(lla_sqrtprod_norm ~ turnId + (1|convId), dt.swbd.align)
 summary(m)
-# turnId      8.265e-04  1.555e-04 4.929e+04   5.316 1.07e-07 ***
+# turnId      8.183e-04  1.507e-04 4.814e+04   5.429 5.68e-08 ***
 
 ##
 # check how lla_* (w/o normalizing) change within dialogue
+m = lmer(lla_sum ~ turnId + (1|convId), dt.swbd.align)
+summary(m)
+# turnId      2.547e-06  4.162e-06 5.647e+04   0.612    0.541 n.s.
+m = lmer(lla_prod ~ turnId + (1|convId), dt.swbd.align)
+summary(m)
+# turnId      3.002e-05  3.561e-06 1.599e+04    8.43   <2e-16 ***
+m = lmer(lla_sqrtprod ~ turnId + (1|convId), dt.swbd.align)
+summary(m)
+# turnId      -4.433e-06  9.433e-06  6.011e+04   -0.47    0.638 n.s.
 
 
 # Read topic information data and join with alignment data
@@ -125,16 +134,39 @@ dt.swbd.comb = dt.swbd.topic[dt.swbd.align, nomatch=0]
 
 # shrink inTopicId column by computing the mean
 dt.swbd.comb = dt.swbd.comb[, {
-        .(topicId = topicId[1], inTopicId = mean(inTopicId), llaNorm = llaNorm[1], ent = mean(ent))
+        .(topicId = topicId[1], inTopicId = mean(inTopicId),
+        lla_sum = lla_sum[1], lla_sum_norm = lla_sum_norm[1],
+        lla_prod = lla_prod[1], lla_prod_norm = lla_prod_norm[1],
+        lla_sqrtprod = lla_sqrtprod[1], lla_sqrtprod_norm = lla_sqrtprod_norm[1],
+        ent = mean(ent))
     }, by = .(convId, turnId)]
 # add uniqueTopicId
 dt.swbd.comb[, uniqueTopicId := .GRP, by = .(convId, topicId)]
 
 # models
-m = lmer(llaNorm ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
+# lla_*_norm ~ inTopicId
+m = lmer(lla_sum_norm ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
 summary(m)
 # inTopicId   9.899e-03  1.563e-03 4.167e+04   6.333 2.43e-10 ***
-# llaNorm increases within topic episode!
+# lla_sum_norm increases within topic episode!
+m = lmer(lla_prod_norm ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
+summary(m)
+# inTopicId   7.342e-03  1.532e-03 3.891e+04   4.793 1.65e-06 ***
+# lla_prod_norm increases
+m = lmer(lla_sqrtprod_norm ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
+summary(m)
+# inTopicId   8.815e-03  1.516e-03 4.134e+04   5.816 6.07e-09 ***
+# lla_sqrtprod_norm increases
+
+# lla_* ~ inTopicId
+m = lmer(lla_prod ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
+summary(m)
+# inTopicId   2.182e-04  3.360e-05 2.761e+04   6.493 8.54e-11 ***
+m = lmer(lla_sqrtprod ~ inTopicId + (1|uniqueTopicId), dt.swbd.comb)
+summary(m)
+# inTopicId   -3.575e-04  9.770e-05  4.087e+04   -3.66 0.000253 ***
+# Haha, opposite direction when we use square root as normalizer
+
 
 m = lmer(llaNorm ~ ent + (1|convId), dt.swbd.comb)
 summary(m)
