@@ -224,23 +224,43 @@ dev.off()
 dt.bnc = fread('data/BNC_text_db100.csv')
 setkey(dt.bnc, convId)
 
-dt.bnc.align = compute_LLA_sumLen(dt.bnc) # takes a few seconds
+system.time(dt.bnc.align <- compute_LLA_sumLen(dt.bnc)) # elapsed 11 sec
 
 # compute the mean lla for each sumLen level
 setkey(dt.bnc.align, sumLen)
-dt.bnc.align.mean = dt.bnc.align[, {.(llaMean = mean(lla[!is.nan(lla)]))}, by = sumLen]
+dt.bnc.align.mean = dt.bnc.align[, {
+        .(lla_sum_mean = mean(lla_sum[!is.nan(lla_sum)]),
+          lla_prod_mean = mean(lla_prod[!is.nan(lla_prod)]),
+          lla_sqrtprod_mean = mean(lla_sqrtprod[!is.nan(lla_sqrtprod)]))
+    }, by = sumLen]
 # join `llaMean` column back to dt.bnc.align
 dt.bnc.align = dt.bnc.align[dt.bnc.align.mean, nomatch = 0]
 # compute the normalized lla
-dt.bnc.align[, llaNorm := lla / llaMean]
+dt.bnc.align[, lla_sum_norm := lla_sum / lla_sum_mean][, lla_prod_norm := lla_prod / lla_prod_mean][, lla_sqrtprod_norm := lla_sqrtprod / lla_sqrtprod_mean]
 
 # Use models to check how llaNorm changes within dialogue and topic episode
-m = lmer(llaNorm ~ turnId + (1|convId), dt.bnc.align)
+# lla_*_norm ~ turnId
+m = lmer(lla_sum_norm ~ turnId + (1|convId), dt.bnc.align)
 summary(m)
-# n.s.
-m = lmer(llaNorm ~ log(turnId) + (1|convId), dt.bnc.align)
+# turnId      -5.764e-04  5.217e-04  1.375e+04  -1.105    0.269 n.s., decrease
+m = lmer(lla_prod_norm ~ turnId + (1|convId), dt.bnc.align)
 summary(m)
-# n.s.
+# turnId      -7.061e-04  5.168e-04  1.300e+04  -1.366    0.172 n.s., decrease
+m = lmer(lla_sqrtprod_norm ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -6.338e-04  5.121e-04  1.358e+04  -1.238    0.216 n.s., decrease
+
+# lla_* ~ turnId
+m = lmer(lla_sum ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -3.221e-05  2.212e-05  1.951e+04  -1.456    0.145 n.s., decrease
+m = lmer(lla_prod ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      1.199e-06  1.974e-05 1.344e+04   0.061    0.952 n.s.
+m = lmer(lla_sqrtprod ~ turnId + (1|convId), dt.bnc.align)
+summary(m)
+# turnId      -6.926e-05  5.053e-05  2.423e+04  -1.371     0.17 n.s., decrease
+
 
 # Read topic information data and join with alignment data
 dt.bnc.topic = fread('data/BNC_entropy_db.csv')
@@ -250,16 +270,41 @@ dt.bnc.comb = dt.bnc.topic[dt.bnc.align, nomatch=0]
 
 # shrink inTopicId column by computing the mean
 dt.bnc.comb = dt.bnc.comb[, {
-        .(topicId = topicId[1], inTopicId = mean(inTopicId), llaNorm = llaNorm[1], ent = mean(ent))
+        .(topicId = topicId[1], inTopicId = mean(inTopicId),
+        lla_sum = lla_sum[1], lla_sum_norm = lla_sum_norm[1],
+        lla_prod = lla_prod[1], lla_prod_norm = lla_prod_norm[1],
+        lla_sqrtprod = lla_sqrtprod[1], lla_sqrtprod_norm = lla_sqrtprod_norm[1],
+        ent = mean(ent))
     }, by = .(convId, turnId)]
 # add uniqueTopicId
 dt.bnc.comb[, uniqueTopicId := .GRP, by = .(convId, topicId)]
 
 # models
-m = lmer(llaNorm ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+# lla_*_norm ~ inTopicId
+m = lmer(lla_sum_norm ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
 summary(m)
-# inTopicId   7.558e-03  1.767e-03 1.958e+04   4.277  1.9e-05 ***
+# inTopicId   7.106e-03  1.754e-03 1.976e+04   4.051 5.12e-05 ***
 # Yes, llaNorm increases within topic episode
+m = lmer(lla_prod_norm ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   7.569e-03  1.735e-03 1.907e+04   4.362  1.3e-05 ***
+m = lmer(lla_sqrtprod_norm ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   7.305e-03  1.719e-03 1.962e+04   4.249 2.16e-05 ***
+
+# lla_* ~ inTopicId
+m = lmer(lla_sum ~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   -1.200e-04  7.394e-05  2.035e+04  -1.623    0.105 n.s.
+m = lmer(lla_prod~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   4.592e-04  6.502e-05 1.813e+04   7.062 1.71e-12 ***
+m = lmer(lla_sqrtprod~ inTopicId + (1|uniqueTopicId), dt.bnc.comb)
+summary(m)
+# inTopicId   -6.773e-04  1.688e-04  2.093e+04  -4.013 6.01e-05 *** decrease
+# again, inconsistent with lla_prod
+
+
 
 m = lmer(llaNorm ~ ent + (1|convId), dt.bnc.comb)
 summary(m)
