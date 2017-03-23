@@ -191,13 +191,19 @@ dt.swbd.bound = dt.swbd.comb[, {
         beforeInd = which(diff(topicId)==1)
         atInd = which(c(0, diff(topicId))==1)
         afterInd = atInd + 1
-        .(llaNormBefore = llaNorm[beforeInd], llaNormAt = llaNorm[atInd], llaNormAfter = llaNorm[afterInd])
+        .(lla_prod_norm_before = lla_prod_norm[beforeInd],
+          lla_prod_norm_at = lla_prod_norm[atInd],
+          lla_prod_norm_after = lla_prod_norm[afterInd])
     }, by = .(convId)]
 # melt
 dt.swbd.bound.melt = melt(dt.swbd.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
 # plot
 p = ggplot(dt.swbd.bound.melt, aes(x=position, y=llaNorm)) +
-    stat_summary(fun.data = mean_cl_boot, geom='errorbar')
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    labs(x = 'Utterance position', y = 'Normalized LLA') +
+    scale_x_discrete(labels = c('Before', 'At', 'After')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
 pdf('figs/llaNorm_acrossBound_SWBD.pdf', 5, 5)
 plot(p)
 dev.off()
@@ -208,11 +214,13 @@ dev.off()
 ##
 # Plot llaNorm against inTopicId, with facet_wrap by topicId
 mean(dt.swbd.comb[, max(inTopicId), by=uniqueTopicId]$V1) # 9
-p = ggplot(dt.swbd.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=llaNorm)) +
+# create the `topicId_text` for facet_wrap
+dt.swbd.comb[, topicId_text := paste0('Episode ', topicId)]
+p = ggplot(dt.swbd.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=lla_prod_norm)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5) +
     stat_summary(fun.y = mean, geom = 'line') +
-    facet_wrap(~topicId, nrow = 1) +
-    xlab('within topic position of utterance') + ylab('LLA normalized by length')
+    facet_wrap(~topicId_text, nrow = 1) +
+    xlab('Utterance position within topic episode') + ylab('Normalized LLA')
 pdf('figs/llaNorm_vs_inTopicId_SWBD.pdf', 9, 2.5)
 plot(p)
 dev.off()
@@ -328,13 +336,19 @@ dt.bnc.bound = dt.bnc.comb[, {
         beforeInd = which(diff(topicId)==1)
         atInd = which(c(0, diff(topicId))==1)
         afterInd = atInd + 1
-        .(llaNormBefore = llaNorm[beforeInd], llaNormAt = llaNorm[atInd], llaNormAfter = llaNorm[afterInd])
+        .(lla_prod_norm_before = lla_prod_norm[beforeInd],
+          lla_prod_norm_at = lla_prod_norm[atInd],
+          lla_prod_norm_after = lla_prod_norm[afterInd])
     }, by = .(convId)]
 # melt
 dt.bnc.bound.melt = melt(dt.bnc.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
 # plot
 p = ggplot(dt.bnc.bound.melt, aes(x=position, y=llaNorm)) +
-    stat_summary(fun.data = mean_cl_boot, geom='errorbar')
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    labs(x = 'Utterance position', y = 'Normalized LLA') +
+    scale_x_discrete(labels = c('Before', 'At', 'After')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
 pdf('figs/llaNorm_acrossBound_BNC.pdf', 5, 5)
 plot(p)
 dev.off()
@@ -343,11 +357,32 @@ dev.off()
 ##
 # Plot llaNorm against inTopicId, with facet_wrap by topicId
 mean(dt.bnc.comb[, max(inTopicId), by=uniqueTopicId]$V1) # 9
-p = ggplot(dt.bnc.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=llaNorm)) +
+# create column for facet_wrap
+dt.bnc.comb[, topicId_text := paste0('Episode ', topicId)]
+p = ggplot(dt.bnc.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=lla_prod_norm)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5) +
     stat_summary(fun.y = mean, geom = 'line') +
     facet_wrap(~topicId, nrow = 1) +
-    xlab('within topic position of utterance') + ylab('LLA normalized by length')
+    xlab('Utterance position within topic episode') + ylab('Normalized LLA')
 pdf('figs/llaNorm_vs_inTopicId_BNC.pdf', 9, 2.5)
+plot(p)
+dev.off()
+
+
+##
+# Plot lla_prod_norm ~ inTopicId for SWBD and BNC together
+dt.swbd.tmp = dt.swbd.comb[, .(topicId, inTopicId, lla_prod_norm, lla_prod, topicId_text)]
+dt.swbd.tmp[, Corpus := 'SWBD']
+dt.bnc.tmp = dt.bnc.comb[, .(topicId, inTopicId, lla_prod_norm, lla_prod, topicId_text)]
+dt.bnc.tmp[, Corpus := 'BNC']
+dt.comb = rbindlist(list(dt.swbd.tmp, dt.bnc.tmp))
+
+p = ggplot(dt.comb[topicId<=6 & inTopicId>=2 & inTopicId<=9,], aes(x=floor(inTopicId-1), y=lla_prod_norm)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill=Corpus)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty=Corpus)) +
+    facet_wrap(~topicId_text, nrow = 1) +
+    xlab('Utterance position within topic episode') + ylab('Normalized LLA') +
+    theme_light() + theme(legend.position=c(.9, .7))
+pdf('figs/nLLA_vs_inTopicId_together.pdf', 9, 2.5)
 plot(p)
 dev.off()
