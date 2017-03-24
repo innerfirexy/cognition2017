@@ -190,10 +190,12 @@ dt.swbd.bound = dt.swbd.comb[, {
         # find the positions where topic shift happens
         beforeInd = which(diff(topicId)==1)
         atInd = which(c(0, diff(topicId))==1)
-        afterInd = atInd + 1
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
         .(lla_prod_norm_before = lla_prod_norm[beforeInd],
           lla_prod_norm_at = lla_prod_norm[atInd],
-          lla_prod_norm_after = lla_prod_norm[afterInd])
+          lla_prod_norm_after1 = lla_prod_norm[afterInd1],
+          lla_prod_norm_after2 = lla_prod_norm[afterInd2])
     }, by = .(convId)]
 # melt
 dt.swbd.bound.melt = melt(dt.swbd.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
@@ -201,8 +203,10 @@ dt.swbd.bound.melt = melt(dt.swbd.bound, id=1, measures=2:4, variable.name='posi
 p = ggplot(dt.swbd.bound.melt, aes(x=position, y=llaNorm)) +
     stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
     stat_summary(fun.y = mean, geom='point', size=3) +
-    labs(x = 'Utterance position', y = 'Normalized LLA') +
-    scale_x_discrete(labels = c('Before', 'At', 'After')) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    annotate('text', x=2, y=1.01, label='Topic shift', color='#B22222', size=5) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Normalized LLA') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
     theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
 pdf('figs/llaNorm_acrossBound_SWBD.pdf', 5, 5)
 plot(p)
@@ -335,19 +339,24 @@ dt.bnc.bound = dt.bnc.comb[, {
         # find the positions where topic shift happens
         beforeInd = which(diff(topicId)==1)
         atInd = which(c(0, diff(topicId))==1)
-        afterInd = atInd + 1
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
         .(lla_prod_norm_before = lla_prod_norm[beforeInd],
           lla_prod_norm_at = lla_prod_norm[atInd],
-          lla_prod_norm_after = lla_prod_norm[afterInd])
+          lla_prod_norm_after1 = lla_prod_norm[afterInd1],
+          lla_prod_norm_after2 = lla_prod_norm[afterInd2])
     }, by = .(convId)]
 # melt
 dt.bnc.bound.melt = melt(dt.bnc.bound, id=1, measures=2:4, variable.name='position', value.name='llaNorm')
+# dt.bnc.bound.melt$position = as.numeric(dt.bnc.bound.melt$position)
 # plot
 p = ggplot(dt.bnc.bound.melt, aes(x=position, y=llaNorm)) +
     stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
     stat_summary(fun.y = mean, geom='point', size=3) +
-    labs(x = 'Utterance position', y = 'Normalized LLA') +
-    scale_x_discrete(labels = c('Before', 'At', 'After')) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Normalized LLA') +
+    annotate('text', x=2, y=.98, label='Topic shift', color='#B22222', size=5) +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
     theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
 pdf('figs/llaNorm_acrossBound_BNC.pdf', 5, 5)
 plot(p)
