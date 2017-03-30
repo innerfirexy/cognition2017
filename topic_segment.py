@@ -9,6 +9,9 @@ import ast
 import os
 import pandas as pd
 import numpy as np
+import random
+import math
+
 
 ##
 # take a list of str as input, and output the sentence index of segment boundaries
@@ -190,7 +193,60 @@ def pseudo_seg_fixedlen(inputfile, outputfile, seglen=10):
 
 
 ##
-# the func that creates pseudo seg_ids and in_seg_ids columns
+# Pseudo segmentation using random length (determined by minlen and maxlen)
+def pseudo_seg_randlen(inputfile, outputfile, minlen, maxlen):
+    # read textdata into a pandas dataframe
+    df = pd.read_csv(inputfile)
+    # BTW, examine if `wodNum` column exists in df
+    # if not, create it from `rawWord` column
+    if 'rawWord' not in df.columns:
+        raise Exception('rawWord column not existed in inputfile')
+    if 'wordNum' not in df.columns:
+        df['wordNum'] = df.rawWord.apply(lambda x: len(x.split()))
+
+    # handle special cases (dialogues that are too short) for BNC
+    if inputfile == 'data/BNC_text_dbfull_mlrcut.csv':
+        df_ref = pd.read_csv('data/BNC_convs_gt10sents.csv')
+        included_cids = df_ref.convId.unique()
+        df = df[df.convId.isin(included_cids)]
+        # remove NaNs in rawWord
+        df = df[df.rawWord.notnull()]
+
+    # For all convIds, assign pseudo segment Ids
+    df_ids = pd.DataFrame()
+    discarded_convIds = []
+    for i, cid in enumerate(df.convId.unique()):
+        nrow = df[df.convId == cid].shape[0]
+        # discared conversations that are too short
+        if nrow < minlen:
+            discarded_convIds.append(cid)
+            continue
+        # create pseudo ids
+        try:
+            pseudo_ids = make_pseudo_ids_rand(nrow, minlen, maxlen)
+        except Exception as e:
+            print('\nproblematic cid: {}'.format(cid))
+            print('nrow = {}'.format(nrow))
+            print('minlen = {0}, maxlen = {1}'.format(minlen, maxlen))
+            raise
+        else:
+            # combine
+            df_tmp = pd.DataFrame(pseudo_ids)
+            df_ids = pd.concat([df_ids, df_tmp], axis=0)
+        # print progress
+        sys.stdout.write('\r{0}/{1} convIds segmented'.format(i+1, len(df.convId.unique())))
+        sys.stdout.flush()
+
+    # combine df and df_ids
+    if len(discarded_convIds) > 0:
+        df = df[~df.convId.isin(discarded_convIds)]
+    df1 = pd.concat([df.reset_index(drop=True), df_ids.reset_index(drop=True)], axis=1) # reset_index is necessary
+    df1.to_csv(outputfile, sep=',', index=False)
+    pass
+
+
+##
+# the func that creates pseudo seg_ids and in_seg_ids columns, using fixed seglen
 def make_pseudo_ids(n, seglen):
     assert n >= seglen
     seg_ids = []
@@ -203,6 +259,34 @@ def make_pseudo_ids(n, seglen):
     if nres > 0:
         seg_ids += [nseg+1] * nres
         in_seg_ids += list(range(1, nres+1))
+    return {'topicId': seg_ids, 'inTopicId': in_seg_ids}
+
+##
+# create pseudo ids, using random seglen
+def make_pseudo_ids_rand(n, minlen, maxlen):
+    assert n >= minlen
+    seg_ids = []
+    in_seg_ids = []
+    count = 0
+    while count < n:
+        randlen = random.randint(minlen, maxlen)
+        if count + randlen <= n:
+            try:
+                ids1 = [1] * randlen if count == 0 else [seg_ids[-1]+1] * randlen
+                ids2 = list(range(1, randlen+1))
+                seg_ids += ids1
+                in_seg_ids += ids2
+                count += randlen
+            except IndexError as e:
+                print('\nrandlen = {0}, count = {1}'.format(randlen, count))
+                raise
+        else:
+            nres = n - count
+            ids1 = [1] * nres if count == 0 else [seg_ids[-1]+1] * nres
+            ids2 = list(range(1, nres+1))
+            seg_ids += ids1
+            in_seg_ids += ids2
+            count += nres
     return {'topicId': seg_ids, 'inTopicId': in_seg_ids}
 
 
@@ -234,6 +318,10 @@ if __name__ == '__main__':
 
     # assign pseudo ids (fixed length) to SWBD
     # pseudo_seg_fixedlen(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_pseudofixed.csv', seglen=10)
-
     # assign pseudo ids (fixed length) to BNC
-    pseudo_seg_fixedlen(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_pseudofixed.csv', seglen=10)
+    # pseudo_seg_fixedlen(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_pseudofixed.csv', seglen=10)
+
+    # assign pseudo ids (random length) to SWBD
+    pseudo_seg_randlen(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_pseudorand.csv', minlen=5, maxlen=11)
+    # assign pseudo ids (random length) to BNC
+    pseudo_seg_randlen(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_pseudorand.csv', minlen=5, maxlen=15)

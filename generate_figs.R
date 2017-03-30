@@ -27,14 +27,34 @@ summary(m)
 ##
 # What are mean topic length
 dt.swbd = fread('data/SWBD_entropy_db.csv')
-setkey(dt.swbd, convId, topicId)
-mean(dt.swbd[, .N, by=.(convId, topicId)]$N) # 9.22
+mean(dt.swbd[, .N, keyby=.(convId, topicId)]$N) # 9.22
 sd(dt.swbd[, .N, by=.(convId, topicId)]$N) # 5.66
+summary(dt.swbd[, .N, keyby=.(convId, topicId)]$N)
+#  Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+# 1.000   5.000   8.000   9.222  11.000  49.000
 
 dt.bnc = fread('data/BNC_entropy_db.csv')
-setkey(dt.bnc, convId, topicId)
-mean(dt.bnc[, .N, by=.(convId, topicId)]$N) # 10.9
+mean(dt.bnc[, .N, keyby=.(convId, topicId)]$N) # 10.9
 sd(dt.bnc[, .N, by=.(convId, topicId)]$N) # 7.3
+summary(dt.bnc[, .N, by=.(convId, topicId)]$N)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+# 1.00    5.00   10.00   10.85   15.00   52.00
 
 # other topic segmentation results
-dt.swbd
+# dp (bayes-seg)
+dt.swbd = fread('data/SWBD_text_db_dp.csv')
+mean(dt.swbd[, .N, keyby=.(convId, topicId)]$N) # 19.7
+sd(dt.swbd[, .N, by=.(convId, topicId)]$N) # 27.0
+
+dt.bnc = fread('data/BNC_text_dbfull_mlrcut_dp.csv')
+mean(dt.bnc[, .N, keyby=.(convId, topicId)]$N) # 13.1
+sd(dt.bnc[, .N, by=.(convId, topicId)]$N) # 35.1
+
+# mcsopt (mincut)
+dt.swbd = fread('data/SWBD_text_db_mcsopt.csv')
+mean(dt.swbd[, .N, keyby=.(convId, topicId)]$N) # 19.7
+sd(dt.swbd[, .N, by=.(convId, topicId)]$N) # 26.8
+
+dt.bnc = fread('data/BNC_text_dbfull_mlrcut_mcsopt.csv')
+mean(dt.bnc[, .N, keyby=.(convId, topicId)]$N) # 13.1
+sd(dt.bnc[, .N, by=.(convId, topicId)]$N) # 29.9

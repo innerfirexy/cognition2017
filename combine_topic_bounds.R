@@ -127,3 +127,18 @@ d1 = fread('data/BNC_entropy_crossvalidate_samepos.csv')
 d2 = fread('data/BNC_text_dbfull_mlrcut_pseudofixed.csv')
 d = combineTopic(d1, d2)
 fwrite(d, 'data/BNC_entropy_crossvalidate_samepos_pseudofixed.csv')
+
+
+##
+# combine SWBD entropy cross-validation samepos with pseudo ids (random seglen)
+d1 = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
+d2 = fread('data/SWBD_text_db_pseudorand.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_crossvalidate_samepos_pseudorand.csv')
+
+##
+# combine BNC entropy cross-validation samepos with pseudo ids (random seglen)
+d1 = fread('data/BNC_entropy_crossvalidate_samepos.csv')
+d2 = fread('data/BNC_text_dbfull_mlrcut_pseudorand.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/BNC_entropy_crossvalidate_samepos_pseudorand.csv')
