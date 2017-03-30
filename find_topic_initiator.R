@@ -341,3 +341,46 @@ m = lmer(ent ~ inTopicId + (1|convId), dt.found)
 summary(m)
 # inTopicId   4.128e-02  9.676e-03 5.157e+04   4.266    2e-05 ***
 # NOTE: entropy increases with inTopicId
+
+
+##
+# for SWBD_entropy_crossvalidate_samepos_pseudofixed.csv
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_pseudofixed.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found)
+summary(m)
+# inTopicId   3.292e-02  1.206e-02 1.025e+05    2.73  0.00634 **
+# NOTE: still increase, but not as strong effect
+
+##
+# for BNC_entropy_crossvalidate_samepos_pseudofixed.csv
+dt = fread('data/BNC_entropy_crossvalidate_samepos_pseudofixed.csv')
+setkey(dt, convId, topicId)
+dt.found = dt[findInitiators(dt, thrhld=5), nomatch=0]
+# plot
+dt.found[, group := 'initiator']
+dt.found[speaker != initiator, group := 'responder']
+p = ggplot(dt.found[inTopicId <= 10 & topicId > 1,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+# model test if entropy increases within topic episode
+m = lmer(ent ~ inTopicId + (1|convId), dt.found[group=='initiator'])
+summary(m)
+# inTopicId   -3.567e-02  2.605e-02  3.018e+04   -1.37    0.171
+# NOTE: Okay, does not decrease

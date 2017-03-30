@@ -145,6 +145,69 @@ def test2():
 
 
 ##
+# Pseudo segmentation using fixed length
+def pseudo_seg_fixedlen(inputfile, outputfile, seglen=10):
+    # read textdata into a pandas dataframe
+    df = pd.read_csv(inputfile)
+    # BTW, examine if `wodNum` column exists in df
+    # if not, create it from `rawWord` column
+    if 'rawWord' not in df.columns:
+        raise Exception('rawWord column not existed in inputfile')
+    if 'wordNum' not in df.columns:
+        df['wordNum'] = df.rawWord.apply(lambda x: len(x.split()))
+
+    # handle special cases (dialogues that are too short) for BNC
+    if inputfile == 'data/BNC_text_dbfull_mlrcut.csv':
+        df_ref = pd.read_csv('data/BNC_convs_gt10sents.csv')
+        included_cids = df_ref.convId.unique()
+        df = df[df.convId.isin(included_cids)]
+        # remove NaNs in rawWord
+        df = df[df.rawWord.notnull()]
+
+    # For all convIds, assign pseudo segment Ids
+    df_ids = pd.DataFrame()
+    discarded_convIds = []
+    for i, cid in enumerate(df.convId.unique()):
+        nrow = df[df.convId == cid].shape[0]
+        # discared conversations that are too short
+        if nrow < seglen:
+            discarded_convIds.append(cid)
+            continue
+        # create pseudo ids
+        pseudo_ids = make_pseudo_ids(nrow, seglen)
+        df_tmp = pd.DataFrame(pseudo_ids)
+        # combine
+        df_ids = pd.concat([df_ids, df_tmp], axis=0)
+        # print progress
+        sys.stdout.write('\r{0}/{1} convIds segmented'.format(i+1, len(df.convId.unique())))
+        sys.stdout.flush()
+
+    # combine df and df_ids
+    if len(discarded_convIds) > 0:
+        df = df[~df.convId.isin(discarded_convIds)]
+    df1 = pd.concat([df.reset_index(drop=True), df_ids.reset_index(drop=True)], axis=1) # reset_index is necessary
+    df1.to_csv(outputfile, sep=',', index=False)
+
+
+##
+# the func that creates pseudo seg_ids and in_seg_ids columns
+def make_pseudo_ids(n, seglen):
+    assert n >= seglen
+    seg_ids = []
+    in_seg_ids = []
+    nseg = n // seglen
+    nres = n % seglen
+    for j in range(nseg):
+        seg_ids += [j+1] * seglen
+        in_seg_ids += list(range(1, seglen+1))
+    if nres > 0:
+        seg_ids += [nseg+1] * nres
+        in_seg_ids += list(range(1, nres+1))
+    return {'topicId': seg_ids, 'inTopicId': in_seg_ids}
+
+
+
+##
 # main
 if __name__ == '__main__':
     # test1()
@@ -166,6 +229,11 @@ if __name__ == '__main__':
 
     # segment SWBD using cue.config, DO NOT work
     # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_cue.csv', config='cue.config')
-
     # segment SWBD using ui.config, DO NOT work
     # seg_textdata(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_ui.csv', config='ui.config')
+
+    # assign pseudo ids (fixed length) to SWBD
+    # pseudo_seg_fixedlen(inputfile='data/SWBD_text_db.csv', outputfile='data/SWBD_text_db_pseudofixed.csv', seglen=10)
+
+    # assign pseudo ids (fixed length) to BNC
+    pseudo_seg_fixedlen(inputfile='data/BNC_text_dbfull_mlrcut.csv', outputfile='data/BNC_text_dbfull_mlrcut_pseudofixed.csv', seglen=10)
