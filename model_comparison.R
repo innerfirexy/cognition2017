@@ -62,6 +62,8 @@ summary(m1)
 # full model
 m2 = lmer(ent ~ inTopicId + globalId + (1|uniqueTopicId) + (1|convId), dt.found[group=='initiator',])
 summary(m2)
+# inTopicId   -1.449e-01  9.453e-03  3.977e+04  -15.33   <2e-16 ***
+# globalId     3.067e-02  1.969e-03  9.692e+03   15.58   <2e-16 ***
 
 # anova
 anova(m, m1)
@@ -122,4 +124,4 @@ anova(m, m1)
 
 # NOTE:
 # So, in BNC, globalId is a better predictor than inTopicId
-# But this does NOT undermine our theoretical contribution. 
+# But this does NOT undermine our theoretical contribution.
