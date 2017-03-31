@@ -1,4 +1,5 @@
 # To address Reviewer 2's point of comparing inTopciId vs. globalId on entropy
+# Also some code check the entropy near topic boundaries
 # especially for topic initiators
 # Yang Xu
 # 3/29/2017
@@ -125,3 +126,117 @@ anova(m, m1)
 # NOTE:
 # So, in BNC, globalId is a better predictor than inTopicId
 # But this does NOT undermine our theoretical contribution.
+
+
+
+####
+# Check the entropy at topic boundaries
+
+# Pseudo episodes, SWBD
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_pseudofixed.csv')
+dt.bound = dt[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+# melt
+dt.bound.melt = melt(dt.bound, id=1, measures=2:5, variable.name='position', value.name='ent')
+# plot
+p = ggplot(dt.bound.melt, aes(x=position, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    # annotate('text', x=3, y=1.01, label='Topic shift', color='#B22222', size=5) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
+
+
+# Pseudo episodes, BNC
+dt = fread('data/BNC_entropy_crossvalidate_samepos_pseudofixed.csv')
+dt.bound = dt[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+# melt
+dt.bound.melt = melt(dt.bound, id=1, measures=2:5, variable.name='position', value.name='ent')
+# plot
+p = ggplot(dt.bound.melt, aes(x=position, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    # annotate('text', x=3, y=1.01, label='Topic shift', color='#B22222', size=5) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
+##
+# T-test for position 0 vs. position 1
+t.test(dt.bound.melt[position=='at', ent], dt.bound.melt[position=='after1', ent])
+# t = 1.5394, df = 9114.1, p-value = 0.1237
+# n.s., which is what we want
+
+
+##
+# Texttiling boundary, SWBD
+dt = fread('data/SWBD_entropy_crossvalidate_samepos_topic.csv')
+dt.bound = dt[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+# melt
+dt.bound.melt = melt(dt.bound, id=1, measures=2:5, variable.name='position', value.name='ent')
+# plot
+p = ggplot(dt.bound.melt, aes(x=position, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    # annotate('text', x=3, y=1.01, label='Topic shift', color='#B22222', size=5) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
+
+##
+# Texttiling boundary, BNC
+dt = fread('data/BNC_entropy_crossvalidate_samepos_topic.csv')
+dt.bound = dt[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+# melt
+dt.bound.melt = melt(dt.bound, id=1, measures=2:5, variable.name='position', value.name='ent')
+# plot
+p = ggplot(dt.bound.melt, aes(x=position, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom='errorbar', width=.2) +
+    stat_summary(fun.y = mean, geom='point', size=3) +
+    stat_summary(fun.y = mean, geom='line', lty=2, group=1) +
+    # annotate('text', x=3, y=1.01, label='Topic shift', color='#B22222', size=5) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
