@@ -7,6 +7,8 @@
 library(data.table)
 library(lme4)
 library(lmerTest)
+library(MuMIn)
+library(cAIC4)
 
 # Use the findInitiators function from find_topic_initiator.R
 findInitiators = function(data, thrhld) {
@@ -63,8 +65,15 @@ summary(m1)
 # full model
 m2 = lmer(ent ~ inTopicId + globalId + (1|uniqueTopicId) + (1|convId), dt.found[group=='initiator',])
 summary(m2)
-# inTopicId   -1.449e-01  9.453e-03  3.977e+04  -15.33   <2e-16 ***
-# globalId     3.067e-02  1.969e-03  9.692e+03   15.58   <2e-16 ***
+
+
+##
+# AIC
+AIC(m) # 425722.8
+AIC(m1) # 425796.8
+BIC(m) # 425758.5
+BIC(m1) # 425832.5
+
 
 # anova
 anova(m, m1)
@@ -114,6 +123,14 @@ summary(m1)
 m2 = lmer(ent ~ inTopicId + globalId + (1|uniqueTopicId) + (1|convId), dt.found[group=='initiator',])
 summary(m2)
 
+##
+# Use cAIC4::cAIC to examine the models
+AIC(m) # 244928.8
+AIC(m1) # 243216.9
+BIC(m) # 244962
+BIC(m1) # 243250.2
+
+
 # anova
 anova(m, m1)
 # Models:
@@ -131,6 +148,8 @@ anova(m, m1)
 
 ####
 # Check the entropy at topic boundaries
+# Look 1 sentence ahead before the boundary
+
 
 # Pseudo episodes, SWBD
 dt = fread('data/SWBD_entropy_crossvalidate_samepos_pseudofixed.csv')
