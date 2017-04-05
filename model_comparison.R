@@ -7,6 +7,7 @@
 library(data.table)
 library(lme4)
 library(lmerTest)
+library(ggplot2)
 library(MuMIn)
 library(cAIC4)
 
@@ -259,3 +260,107 @@ p = ggplot(dt.bound.melt, aes(x=position, y=ent)) +
     labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
     scale_x_discrete(labels = c('-1', '0', '1', '2')) +
     theme_light() + theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'))
+
+
+
+###
+# Plot the real (TextTiling) and pseudo (fixed length) boundaries together
+
+# SWBD
+dt.swbd.real = fread('data/SWBD_entropy_crossvalidate_samepos_topic.csv')
+dt.swbd.real.b = dt.swbd.real[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+dt.swbd.real.bm = melt(dt.swbd.real.b, id=1, measures=2:5, variable.name='position', value.name='ent')
+dt.swbd.real.bm[, Group := 'Real']
+
+dt.swbd.pseudo = fread('data/SWBD_entropy_crossvalidate_samepos_pseudofixed.csv')
+dt.swbd.pseudo.b = dt.swbd.pseudo[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+dt.swbd.pseudo.bm = melt(dt.swbd.pseudo.b, id=1, measures=2:5, variable.name='position', value.name='ent')
+dt.swbd.pseudo.bm[, Group := 'Pseudo']
+
+dt.swbd.comb = rbindlist(list(dt.swbd.real.bm, dt.swbd.pseudo.bm))
+d.rec = data.table(x1=1.75, x2=2.25, y1=6.9, y2=12.5)
+p = ggplot(dt.swbd.comb, aes(x=position, y=ent, group=Group)) +
+    stat_summary(fun.data = mean_cl_boot, geom='ribbon', alpha=.5, aes(fill=Group)) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Group)) +
+    stat_summary(fun.y = mean, geom='line', aes(lty=Group)) +
+    scale_linetype_manual(values=c('dashed', 'solid')) +
+    scale_shape_manual(values=c(17, 19)) +
+    annotate('text', x=2, y=10, label='Topic shift', color='#B22222', size=5) +
+    geom_rect(data=d.rec, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=T), fill='grey', alpha=.5, inherit.aes=F) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() +
+    theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'), legend.position=c(.8, .8))
+pdf('figs/real_pseudo_bound_ent_swbd.pdf', 5, 5)
+plot(p)
+dev.off()
+
+
+# BNC
+dt.bnc.real = fread('data/BNC_entropy_crossvalidate_samepos_topic.csv')
+dt.bnc.real.b = dt.bnc.real[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+dt.bnc.real.bm = melt(dt.bnc.real.b, id=1, measures=2:5, variable.name='position', value.name='ent')
+dt.bnc.real.bm[, Group := 'Real']
+
+dt.bnc.pseudo = fread('data/BNC_entropy_crossvalidate_samepos_pseudofixed.csv')
+dt.bnc.pseudo.b = dt.bnc.pseudo[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+dt.bnc.pseudo.bm = melt(dt.bnc.pseudo.b, id=1, measures=2:5, variable.name='position', value.name='ent')
+dt.bnc.pseudo.bm[, Group := 'Pseudo']
+
+dt.bnc.comb = rbindlist(list(dt.bnc.real.bm, dt.bnc.pseudo.bm))
+d.rec = data.table(x1=1.75, x2=2.25, y1=12, y2=18)
+p = ggplot(dt.bnc.comb, aes(x=position, y=ent, group=Group)) +
+    stat_summary(fun.data = mean_cl_boot, geom='ribbon', alpha=.5, aes(fill=Group)) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Group)) +
+    stat_summary(fun.y = mean, geom='line', aes(lty=Group)) +
+    scale_linetype_manual(values=c('dashed', 'solid')) +
+    scale_shape_manual(values=c(17, 19)) +
+    annotate('text', x=2, y=14, label='Topic shift', color='#B22222', size=5) +
+    geom_rect(data=d.rec, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=T), fill='grey', alpha=.5, inherit.aes=F) +
+    labs(x = 'Relative utterance position from topic boundary', y = 'Per-word information content') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() +
+    theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'), legend.position=c(.8, .8))
+pdf('figs/real_pseudo_bound_ent_bnc.pdf', 5, 5)
+plot(p)
+dev.off()
