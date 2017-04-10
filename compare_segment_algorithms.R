@@ -22,6 +22,7 @@ dt1[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
 # mean topic episode length
 dt1.stats = dt1[, .N, keyby = uniqueTopicId]
 mean(dt1.stats$N) # 19.7
+median(dt1.stats$N) # 9
 sd(dt1.stats$N) # 27.0
 
 # check ent ~ globalId
@@ -40,9 +41,9 @@ summary(m)
 # inTopicId   -7.270e-03  8.064e-03  5.737e+04  -0.902    0.367
 # n.s. for the first 20 sentences
 
-m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt1[globalId<=100 & inTopicId<=8])
+m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt1[globalId<=100 & inTopicId<=9]) # Median length
 summary(m)
-# inTopicId   9.845e-02  2.674e-02 3.218e+04   3.681 0.000233 ***
+# inTopicId   5.494e-02  2.280e-02 3.568e+04   2.409    0.016 *
 # increas at the biginning for the first 8 sents
 m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt1[globalId<=100 & inTopicId>9 & inTopicId<=20])
 summary(m)
@@ -62,6 +63,7 @@ dt2[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
 # mean topic episode length
 dt2.stats = dt2[, .N, keyby = uniqueTopicId]
 mean(dt2.stats$N) # 13.1
+median(dt2.stats$N) # 4
 sd(dt2.stats$N) # 35.1
 
 # check ent ~ globalId
@@ -87,3 +89,47 @@ p = ggplot(dt2[globalId<=100 & inTopicId<=13], aes(x=inTopicId, y=ent)) +
 
 ##
 # SWBD
+dt1 = fread('data/SWBD_entropy_crossvalidate_samepos_mcsopt.csv')
+# add uniqueTopicId
+dt1[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
+# mean topic episode length
+dt1.stats = dt1[, .N, keyby = uniqueTopicId]
+mean(dt1.stats$N) # 19.7
+median(dt1.stats$N) # 7
+sd(dt1.stats$N) # 26.7
+
+# check ent ~ inTopicId
+m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt1[globalId<=100 & inTopicId<=20]) # Mean length
+summary(m)
+# inTopicId   5.089e-02  8.434e-03 5.339e+04   6.034 1.61e-09 ***
+
+m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt1[globalId<=100 & inTopicId<=7]) # Median length
+summary(m)
+# inTopicId   1.724e-01  3.544e-02 2.176e+04   4.865 1.15e-06 ***
+
+# plot ent ~ inTopicId
+p = ggplot(dt1[globalId<=100 & inTopicId<=20], aes(x=inTopicId, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon') +
+    stat_summary(fun.y = mean, geom = 'line')
+
+
+##
+# BNC
+dt2 = fread('data/BNC_entropy_crossvalidate_samepos_mcsopt.csv')
+# add uniqueTopicId
+dt2[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
+# mean topic episode length
+dt2.stats = dt2[, .N, keyby = uniqueTopicId]
+mean(dt2.stats$N) # 13.1
+median(dt2.stats$N) # 1
+sd(dt2.stats$N) # 29.9
+
+# check ent ~ inTopicId
+m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt2[globalId<=100 & inTopicId<=13]) # Mean length
+summary(m)
+# inTopicId   1.834e-01  2.170e-02 2.825e+04   8.453   <2e-16 ***
+
+# plot ent ~ inTopicId
+p = ggplot(dt2[globalId<=100 & inTopicId<=13], aes(x=inTopicId, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon') +
+    stat_summary(fun.y = mean, geom = 'line')
