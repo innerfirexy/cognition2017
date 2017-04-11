@@ -55,6 +55,23 @@ p = ggplot(dt1[globalId<=100 & inTopicId<=20], aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon') +
     stat_summary(fun.y = mean, geom = 'line')
 
+#
+# plot bayes-seg, mincut, and TextTiling together
+dt.swbd1 = fread('data/SWBD_entropy_crossvalidate_samepos_dp.csv')
+dt.swbd2 = fread('data/SWBD_entropy_crossvalidate_samepos_mcsopt.csv')
+dt.swbd3 = fread('data/SWBD_entropy_crossvalidate_samepos_tt.csv')
+dt.swbd1[, Algorithm := 'BayesSeg'][, ent := ent+1]
+dt.swbd2[, Algorithm := 'MinCutSeg']
+dt.swbd3[, Algorithm := 'TextTiling'][, ent := ent-1]
+dt.swbd = rbindlist(list(dt.swbd1, dt.swbd2, dt.swbd3))
+
+p = ggplot(dt.swbd[(Algorithm=='BayesSeg' & inTopicId<=20) | (Algorithm=='MinCutSeg' & inTopicId<=20) | (Algorithm=='TextTiling' & inTopicId<=9)],
+        aes(x=inTopicId, y=ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Algorithm), alpha=.5) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty=Algorithm)) +
+    
+
+
 ##
 # BNC
 dt2 = fread('data/BNC_entropy_crossvalidate_samepos_dp.csv')
@@ -133,3 +150,28 @@ summary(m)
 p = ggplot(dt2[globalId<=100 & inTopicId<=13], aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon') +
     stat_summary(fun.y = mean, geom = 'line')
+
+
+
+#####
+# TextTiling
+
+##
+# SWBD
+dt1 = fread('data/SWBD_entropy_crossvalidate_samepos_tt.csv')
+dt1[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
+# mean topic episode length
+dt1.stats = dt1[, .N, keyby = uniqueTopicId]
+mean(dt1.stats$N) # 9.2
+median(dt1.stats$N) # 8
+sd(dt1.stats$N) # 5.7
+
+##
+# BNC
+dt2 = fread('data/BNC_entropy_crossvalidate_samepos_tt.csv')
+dt2[, uniqueTopicId := .GRP, keyby = .(convId, topicId)]
+# mean topic episode length
+dt2.stats = dt2[, .N, keyby = uniqueTopicId]
+mean(dt2.stats$N) # 10.9
+median(dt2.stats$N) # 10
+sd(dt2.stats$N) # 7.3

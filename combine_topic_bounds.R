@@ -107,6 +107,13 @@ fwrite(d, 'data/BNC_entropy_crossvalidate_samepos_mcsopt.csv')
 
 
 ##
+# combine SWBD entropy cross-validation samepos with topic ids from texttiling in db
+d1 = fread('data/SWBD_entropy_crossvalidate_samepos.csv')
+d2 = fread('data/SWBD_entropy_db.csv')
+d = combineTopic(d1, d2)
+fwrite(d, 'data/SWBD_entropy_crossvalidate_samepos_tt.csv')
+
+##
 # combine BNC entropy cross-validation samepos with topic ids from texttiling in db
 d1 = fread('data/BNC_entropy_crossvalidate_samepos.csv')
 d2 = fread('data/BNC_entropy_db.csv')
