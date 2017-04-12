@@ -60,12 +60,12 @@ p = ggplot(dt1[globalId<=100 & inTopicId<=20], aes(x=inTopicId, y=ent)) +
 dt.swbd1 = fread('data/SWBD_entropy_crossvalidate_samepos_dp.csv')
 dt.swbd2 = fread('data/SWBD_entropy_crossvalidate_samepos_mcsopt.csv')
 dt.swbd3 = fread('data/SWBD_entropy_crossvalidate_samepos_tt.csv')
-dt.swbd1[, Algorithm := 'BayesSeg'][, ent := ent+1]
+dt.swbd1[, Algorithm := 'BayesianSeg'][, ent := ent+1]
 dt.swbd2[, Algorithm := 'MinCutSeg']
 dt.swbd3[, Algorithm := 'TextTiling'][, ent := ent-1]
 dt.swbd = rbindlist(list(dt.swbd1, dt.swbd2, dt.swbd3))
 
-p = ggplot(dt.swbd[(Algorithm=='BayesSeg' & inTopicId<=20) | (Algorithm=='MinCutSeg' & inTopicId<=20) | (Algorithm=='TextTiling' & inTopicId<=9)],
+p = ggplot(dt.swbd[(Algorithm=='BayesianSeg' & inTopicId<=20) | (Algorithm=='MinCutSeg' & inTopicId<=20) | (Algorithm=='TextTiling' & inTopicId<=9)],
         aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Algorithm), alpha=.5) +
     stat_summary(fun.y = mean, geom = 'line', aes(lty=Algorithm)) +
@@ -94,9 +94,9 @@ summary(m)
 # increase
 
 # check ent ~ inTopicId
-m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt2[globalId<=100])
+m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt2[globalId<=100 & inTopicId<=13])
 summary(m)
-# inTopicId   5.789e-02  4.493e-03 4.528e+04   12.88   <2e-16 ***
+# inTopicId   1.237e-01  2.218e-02 3.283e+04   5.578 2.45e-08 ***
 # increase
 
 # plot ent ~ inTopicId
@@ -109,13 +109,13 @@ p = ggplot(dt2[globalId<=100 & inTopicId<=13], aes(x=inTopicId, y=ent)) +
 dt.bnc1 = fread('data/BNC_entropy_crossvalidate_samepos_dp.csv')
 dt.bnc2 = fread('data/BNC_entropy_crossvalidate_samepos_mcsopt.csv')
 dt.bnc3 = fread('data/BNC_entropy_db.csv')
-dt.bnc1[, Algorithm := 'BayesSeg'][, ent := ent+1]
+dt.bnc1[, Algorithm := 'BayesianSeg'][, ent := ent+1]
 dt.bnc2[, Algorithm := 'MinCutSeg']
 dt.bnc3[, Algorithm := 'TextTiling'][, ent := ent-1]
 dt.bnc = rbindlist(list(dt.bnc1, dt.bnc2,
     dt.bnc3[,.(convId, globalId, ent, speaker, wordNum, topicId, inTopicId, Algorithm)]))
 
-p = ggplot(dt.bnc[(Algorithm=='BayesSeg' & inTopicId<=13) | (Algorithm=='MinCutSeg' & inTopicId<=13) | (Algorithm=='TextTiling' & inTopicId<=13)],
+p = ggplot(dt.bnc[(Algorithm=='BayesianSeg' & inTopicId<=13) | (Algorithm=='MinCutSeg' & inTopicId<=13) | (Algorithm=='TextTiling' & inTopicId<=13)],
         aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Algorithm), alpha=.5) +
     stat_summary(fun.y = mean, geom = 'line', aes(lty=Algorithm)) +
