@@ -212,3 +212,82 @@ sd(dt2.stats$N) # 7.3
 # check ent ~ inTopicId
 m = lmer(ent ~ inTopicId + (1|uniqueTopicId), dt2) # Mean length
 summary(m)
+# inTopicId   1.309e-02  3.740e-03 3.556e+04     3.5 0.000466 ***
+
+
+
+######
+# Plot the entropy change near topic boundaries
+# Use the method in model_comparison.R
+
+# the func that returns the boundary positions, and melt the data
+getBound = function(dt) {
+    dt.b = dt[, {
+        # find the positions where topic shift happens
+        beforeInd1 = which(diff(topicId)==1)
+        atInd = which(c(0, diff(topicId))==1)
+        afterInd1 = atInd + 1
+        afterInd2 = atInd + 2
+        .(before1 = ent[beforeInd1],
+          at = ent[atInd],
+          after1 = ent[afterInd1],
+          after2 = ent[afterInd2])
+    }, by = .(convId)]
+    dt.bm = melt(dt.b, id=1, measures=2:5, variable.name='position', value.name='ent')
+    dt.bm
+}
+
+# SWBD
+dt.swbd1 = fread('data/SWBD_entropy_crossvalidate_samepos_dp.csv')
+dt.swbd2 = fread('data/SWBD_entropy_crossvalidate_samepos_mcsopt.csv')
+dt.swbd3 = fread('data/SWBD_entropy_crossvalidate_samepos_tt.csv')
+dt.swbd1.b = getBound(dt.swbd1)
+dt.swbd2.b = getBound(dt.swbd2)
+dt.swbd3.b = getBound(dt.swbd3)
+dt.swbd1.b[, Algorithm := 'BayesianSeg'][, ent := ent+1]
+dt.swbd2.b[, Algorithm := 'MinCutSeg']
+dt.swbd3.b[, Algorithm := 'TextTiling'][, ent := ent-1]
+dt.swbd.b = rbindlist(list(dt.swbd1.b, dt.swbd2.b, dt.swbd3.b))
+
+d.rec = data.table(x1=1.75, x2=2.25, y1=6, y2=12)
+p = ggplot(dt.swbd.b, aes(x=position, y=ent, group=Algorithm)) +
+    stat_summary(fun.data = mean_cl_boot, geom='ribbon', alpha=.5, aes(fill=Algorithm)) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Algorithm)) +
+    stat_summary(fun.y = mean, geom='line', aes(lty=Algorithm)) +
+    annotate('text', x=2, y=10, label='Topic shift', color='#B22222', size=5) +
+    geom_rect(data=d.rec, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=T), fill='grey', alpha=.5, inherit.aes=F) +
+    labs(x = 'Relative sentence position from topic boundary', y = 'Sentence information (bit)') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() +
+    theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'), legend.position=c(.7, .2))
+pdf('figs/algo_compare_bound_SWBD.pdf', 5, 5)
+plot(p)
+dev.off()
+
+
+# BNC
+dt.bnc1 = fread('data/BNC_entropy_crossvalidate_samepos_dp.csv')
+dt.bnc2 = fread('data/BNC_entropy_crossvalidate_samepos_mcsopt.csv')
+dt.bnc3 = fread('data/BNC_entropy_db.csv')
+dt.bnc1.b = getBound(dt.bnc1)
+dt.bnc2.b = getBound(dt.bnc2)
+dt.bnc3.b = getBound(dt.bnc3)
+dt.bnc1.b[, Algorithm := 'BayesianSeg'][, ent := ent+1]
+dt.bnc2.b[, Algorithm := 'MinCutSeg']
+dt.bnc3.b[, Algorithm := 'TextTiling'][, ent := ent-1]
+dt.bnc.b = rbindlist(list(dt.bnc1.b, dt.bnc2.b, dt.bnc3.b))
+
+d.rec = data.table(x1=1.75, x2=2.25, y1=9.5, y2=14.5)
+p = ggplot(dt.bnc.b, aes(x=position, y=ent, group=Algorithm)) +
+    stat_summary(fun.data = mean_cl_boot, geom='ribbon', alpha=.5, aes(fill=Algorithm)) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Algorithm)) +
+    stat_summary(fun.y = mean, geom='line', aes(lty=Algorithm)) +
+    annotate('text', x=2, y=12, label='Topic shift', color='#B22222', size=5) +
+    geom_rect(data=d.rec, aes(xmin=x1, xmax=x2, ymin=y1, ymax=y2, fill=T), fill='grey', alpha=.5, inherit.aes=F) +
+    labs(x = 'Relative sentence position from topic boundary', y = 'Sentence information (bit)') +
+    scale_x_discrete(labels = c('-1', '0', '1', '2')) +
+    theme_light() +
+    theme(axis.text.x = element_text(size=12, color='#B22222', face='bold'), legend.position=c(.7, .45))
+pdf('figs/algo_compare_bound_BNC.pdf', 5, 5)
+plot(p)
+dev.off()
