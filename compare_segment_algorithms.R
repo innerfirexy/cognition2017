@@ -68,6 +68,7 @@ dt.swbd = rbindlist(list(dt.swbd1, dt.swbd2, dt.swbd3))
 p = ggplot(dt.swbd[(Algorithm=='BayesianSeg' & inTopicId<=20) | (Algorithm=='MinCutSeg' & inTopicId<=20) | (Algorithm=='TextTiling' & inTopicId<=9)],
         aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Algorithm), alpha=.5) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Algorithm)) +
     stat_summary(fun.y = mean, geom = 'line', aes(lty=Algorithm)) +
     geom_vline(xintercept=9, color='red', size=.75, lty='dashed') +
     theme_light() + theme(legend.position=c(.8,.15)) +
@@ -118,6 +119,7 @@ dt.bnc = rbindlist(list(dt.bnc1, dt.bnc2,
 p = ggplot(dt.bnc[(Algorithm=='BayesianSeg' & inTopicId<=13) | (Algorithm=='MinCutSeg' & inTopicId<=13) | (Algorithm=='TextTiling' & inTopicId<=13)],
         aes(x=inTopicId, y=ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Algorithm), alpha=.5) +
+    stat_summary(fun.y = mean, geom='point', size=2.5, aes(shape=Algorithm)) +
     stat_summary(fun.y = mean, geom = 'line', aes(lty=Algorithm)) +
     # geom_vline(xintercept=9, color='red', size=.75, lty='dashed') +
     theme_light() + theme(legend.position=c(.15,.85)) +
@@ -264,6 +266,14 @@ pdf('figs/algo_compare_bound_SWBD.pdf', 5, 5)
 plot(p)
 dev.off()
 
+# t-test between `before1` and `at`
+t.test(dt.swbd.b[Algorithm=='BayesianSeg' & position=='before1' & !is.na(ent), ent],
+    dt.swbd.b[Algorithm=='BayesianSeg' & position=='at' & !is.na(ent), ent])
+# t = 3.511, df = 9685.1, p-value = 0.0004485
+t.test(dt.swbd.b[Algorithm=='MinCutSeg' & position=='before1' & !is.na(ent), ent],
+    dt.swbd.b[Algorithm=='MinCutSeg' & position=='at' & !is.na(ent), ent])
+# t = 6.7258, df = 8124.1, p-value = 1.864e-11
+
 
 # BNC
 dt.bnc1 = fread('data/BNC_entropy_crossvalidate_samepos_dp.csv')
@@ -291,3 +301,11 @@ p = ggplot(dt.bnc.b, aes(x=position, y=ent, group=Algorithm)) +
 pdf('figs/algo_compare_bound_BNC.pdf', 5, 5)
 plot(p)
 dev.off()
+
+# t-test between `before1` and `at`
+t.test(dt.bnc.b[Algorithm=='BayesianSeg' & position=='before1' & !is.na(ent), ent],
+    dt.bnc.b[Algorithm=='BayesianSeg' & position=='at' & !is.na(ent), ent])
+# t = 3.4934, df = 10665, p-value = 0.0004789
+t.test(dt.bnc.b[Algorithm=='MinCutSeg' & position=='before1' & !is.na(ent), ent],
+    dt.bnc.b[Algorithm=='MinCutSeg' & position=='at' & !is.na(ent), ent])
+# t = 4.7961, df = 10378, p-value = 1.64e-06
