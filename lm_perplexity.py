@@ -106,5 +106,17 @@ if __name__ == '__main__':
 
     # SWBD cross-validation perplexity
     # cv_ppl(data_file='data/SWBD_text_db.csv', output_file='data/lm/SWBD_cv_ppl.txt')
+    # mean = 77.38471, sd = 1.898807
     # BNC cross-validation perplexity
     # cv_ppl(data_file='data/BNC_text_dbfull_mlrcut.csv', output_file='data/lm/BNC_cv_ppl.txt')
+    # mean = 107.4193, sd = 15.49336
+
+    # LM trained on CSN, tested on SWBD
+    # print('LM trained on CSN, tested on SWBD:')
+    # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/SWBD.txt')))
+    # Perplexity: 244.400680542
+
+    # LM trained on CSN, tested on BNC
+    # print('LM trained on CSN, tested on BNC:')
+    # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/BNC_full.txt')))
+    # Perplexity: 266.107971191
