@@ -171,7 +171,6 @@ def crossvalidate_samepos(inputfile, outputfile, sent_n=100):
 
     # estimate information content using cross-validation
     results = []
-    entropy_results = []
     for i in range(0, foldN):
         # for each sentence position
         for j in range(1, sent_n+1):
