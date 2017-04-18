@@ -12,6 +12,7 @@ import subprocess
 import csv
 import math
 import os
+import re
 
 from random import shuffle
 from srilm import *
@@ -33,6 +34,21 @@ def model_ppl(lm_file, test_file, lm_order=3):
     else:
         deleteLM(lm)
         return ppl
+
+def model_oov(lm_file, test_file, lm_order=3, verbose=False):
+    # run command
+    srilm_dir = '/Users/yangxu/projects/srilm-1.7.1/bin/macosx/'
+    test_cmd = [srilm_dir + 'ngram', '-lm', lm_file, '-ppl', test_file]
+    try:
+        output = subprocess.check_output(test_cmd, stderr=subprocess.STDOUT)
+        if verbose:
+            print(output)
+        m = re.search(r'[0-9]+(?= OOVs)', output)
+        oovn = int(m.group(0))
+    except Exception as e:
+        raise
+    else:
+        return oovn
 
 ##
 # get the perplexity of cross-validation
@@ -79,16 +95,19 @@ def cv_ppl(data_file, output_file):
         if return_code != 0:
             raise Exception('trainning failed for fold %s' % i)
         print('training done for fold %s' % i)
-        # compute perplexity
+        # compute perplexity and OOVs number
         lm = initLM(3)
         readLM(lm, lmfile)
         ppl = getCorpusPpl(lm, testfile)
-        results.append(ppl)
+        oovn = model_oov(lm_file=lmfile, test_file=testfile)
+        results.append((ppl, oovn))
 
     # write results to output_file
     with open(output_file, 'w') as f:
+        csvwriter = csv.writer(f, delimiter=',')
+        csvwriter.writerow(['ppl', 'oovn'])
         for row in results:
-            f.write(str(row) + '\n')
+            csvwriter.writerow(row)
 
 ##
 # Get the perplexity of running cross-validation over sentences of same positions
@@ -153,7 +172,6 @@ def cv_samepos_ppl(input_file, output_file, sent_n=100):
         csvwriter.writerow(['foldId', 'sentenceId', 'ppl'])
         for row in results:
             csvwriter.writerow(row)
-    pass
 
 
 ##
@@ -163,28 +181,38 @@ if __name__ == '__main__':
     # print('LM trained on BNC, tested on SWBD:')
     # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/BNC_full_order3.lm', test_file='data/lm/SWBD.txt')))
     # Perplexity: 179.795227051
+    # print('OOVs number: {}'.format(model_oov(lm_file='data/lm/BNC_full_order3.lm', test_file='data/lm/SWBD.txt')))
+    # OOVN: 141724
 
     # LM trained on SWBD, tested on BNC:
     # print('LM trained on SWBD, tested on BNC:')
     # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/SWBD_order3.lm', test_file='data/lm/BNC_full.txt')))
     # Perplexity: 266.232452393
+    # print('OOVs number: {}'.format(model_oov(lm_file='data/lm/SWBD_order3.lm', test_file='data/lm/BNC_full.txt')))
+    # OOVN: 74075
 
     # SWBD cross-validation perplexity
     # cv_ppl(data_file='data/SWBD_text_db.csv', output_file='data/lm/SWBD_cv_ppl.txt')
-    # mean = 77.38471, sd = 1.898807
+    # Perplexity, mean = 77.38471, sd = 1.898807
+    # OOVN: sum = 13009, mean = 1300.9, sd = 85.93079
     # BNC cross-validation perplexity
     # cv_ppl(data_file='data/BNC_text_dbfull_mlrcut.csv', output_file='data/lm/BNC_cv_ppl.txt')
-    # mean = 107.4193, sd = 15.49336
+    # Perplexity, mean = 107.4193, sd = 15.49336
+    # OOVN: 14417, mean = 1441.7, sd = 605.2599
 
     # LM trained on CSN, tested on SWBD
     # print('LM trained on CSN, tested on SWBD:')
     # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/SWBD.txt')))
     # Perplexity: 244.400680542
+    # print('OOVN: {}'.format(model_oov(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/SWBD.txt')))
+    # OOVN: 108360
 
     # LM trained on CSN, tested on BNC
     # print('LM trained on CSN, tested on BNC:')
     # print('Perplexity: {}'.format(model_ppl(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/BNC_full.txt')))
     # Perplexity: 266.107971191
+    # print('OOVN: {}'.format(model_oov(lm_file='data/lm/CSN_order3.lm', test_file='data/lm/BNC_full.txt')))
+    # OOVN: 7129
 
     # SWBD cv samepos ppl
     # cv_samepos_ppl(input_file='data/SWBD_text_db.csv', output_file='data/lm/SWBD_cv_samepos_ppl.txt')
