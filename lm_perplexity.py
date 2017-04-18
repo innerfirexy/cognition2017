@@ -151,7 +151,7 @@ def cv_samepos_ppl(input_file, output_file, sent_n=100):
             return_code = subprocess.check_call(train_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
             if return_code != 0:
                 raise Exception('trainning failed for fold %s at sentence position %s' % (i, j))
-            # compute perplexity
+            # compute perplexity and oovn
             testtext = get_sents_fromdict(alldata, foldIds[i], j)
             testfile = 'data/lm/test.txt'
             with open(testfile, 'w') as f:
@@ -160,7 +160,8 @@ def cv_samepos_ppl(input_file, output_file, sent_n=100):
             lm = initLM(3)
             readLM(lm, lmfile)
             ppl = getCorpusPpl(lm, testfile)
-            results.append((i, j, ppl))
+            oovn = model_oov(lm_file=lmfile, test_file=testfile)
+            results.append((i, j, ppl, oovn))
             # print process within a fold
             sys.stdout.write('\rfold %s, %s/%s sentences done' % (i, j, sent_n))
             sys.stdout.flush()
@@ -169,7 +170,7 @@ def cv_samepos_ppl(input_file, output_file, sent_n=100):
     # write results to outputfile
     with open(output_file, 'w') as f:
         csvwriter = csv.writer(f, delimiter=',')
-        csvwriter.writerow(['foldId', 'sentenceId', 'ppl'])
+        csvwriter.writerow(['foldId', 'sentenceId', 'ppl', 'oovn'])
         for row in results:
             csvwriter.writerow(row)
 
@@ -215,8 +216,10 @@ if __name__ == '__main__':
     # OOVN: 7129
 
     # SWBD cv samepos ppl
-    # cv_samepos_ppl(input_file='data/SWBD_text_db.csv', output_file='data/lm/SWBD_cv_samepos_ppl.txt')
-    # mean = 88.9816, sd = 9.595562
+    cv_samepos_ppl(input_file='data/SWBD_text_db.csv', output_file='data/lm/SWBD_cv_samepos_ppl.txt')
+    # Perplexity: mean = 88.9816, sd = 9.595562
+    # OOVN: 114950
     # BNC cv samepos ppl
-    # cv_samepos_ppl(input_file='data/BNC_text_dbfull_mlrcut.csv', output_file='data/lm/BNC_cv_samepos_ppl.txt')
-    # mean = 84.92237, sd = 15.58643
+    cv_samepos_ppl(input_file='data/BNC_text_dbfull_mlrcut.csv', output_file='data/lm/BNC_cv_samepos_ppl.txt')
+    # Perplexity: mean = 84.92237, sd = 15.58643
+    # OOVN: 55438
