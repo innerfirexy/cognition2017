@@ -320,6 +320,20 @@ summary(m)
 # inTopicId   5.730e-02  3.821e-03 4.205e+04   15.00   <2e-16 ***
 # NOTE: entropy increases with inTopicId
 
+# Add `topicLen` column
+dt.found[, topicLen := .N, by = .(convId, topicId)]
+summary(dt.found$topicLen)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
+# 1.00   23.00   57.00   81.01  106.00  817.00
+# filter out short topics
+p = ggplot(dt.found[inTopicId <= 13 & topicId > 1 & topicLen>=30,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('entropy')
+
 
 ##
 # find topic initiators for BNC_entropy_crossvalidate_samepos_tt.csv
