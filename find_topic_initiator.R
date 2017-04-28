@@ -322,7 +322,7 @@ summary(m)
 
 # Add `topicLen` column
 dt.found[, topicLen := .N, by = .(convId, topicId)]
-summary(dt.found$topicLen)
+summary(dt.found$topicLen) # Well, this tells nothing
 # Min. 1st Qu.  Median    Mean 3rd Qu.    Max.
 # 1.00   23.00   57.00   81.01  106.00  817.00
 # filter out short topics

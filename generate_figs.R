@@ -7,20 +7,47 @@ library(ggplot2)
 library(lme4)
 library(lmerTest)
 
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
 
 ##
 # Plot Figure 1
+# combine the original Fig 1 & 2
 dt.swbd = fread('data/SWBD_entropy_db.csv')
+dt.swbd.norm = fread('data/SWBD_entropy_db_norm.csv')
+dt.bnc = fread('data/BNC_entropy_db.csv')
+dt.bnc.norm = fread('data/BNC_entropy_db_norm.csv')
 
-# models
-m = lmer(ent ~ globalId + (1|convId), dt.swbd)
-summary(m)
-# globalId    4.225e-03  4.888e-04 1.036e+05   8.643   <2e-16 ***
-# NOTE: entropy increases within dialogue
-m = lmer(wordNum ~ globalId + (1|convId), dt.swbd)
-summary(m)
-# globalId    -8.455e-03  1.262e-03  1.036e+05  -6.698 2.12e-11 ***
-# NOTE: wordNum decreases with globalId
+# sent info
+dt.swbd[, Corpus := 'SWBD']
+dt.bnc[, Corpus := 'BNC']
+dt.si = rbindlist(list(dt.swbd[, c(4, 5, 9)], dt.bnc[, c(4, 6, 10)]))
+p = ggplot(dt.si[globalId<=100], aes(x = globalId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Corpus, lty=Corpus), alpha=.5) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty=Corpus)) +
+    scale_x_continuous(breaks = c(1,25,50,75,100)) +
+    labs(x = 'Sentence position within dialogue', y = 'Sentence information (bit)') +
+    theme_light() + theme(legend.position=c(.1,.8))
+pdf('figs/si_vs_global.pdf', 5, 5)
+plot(p)
+dev.off()
+
+# norm sent info
+dt.swbd.norm[, Corpus := 'SWBD']
+dt.bnc.norm[, Corpus := 'BNC']
+dt.nsi = rbindlist(list(dt.swbd.norm[, c(4, 10, 11)], dt.bnc.norm[, c(4, 11, 12)]))
+dt.nsi[Corpus=='BNC', ent_norm := ent_norm+.05] # place offset
+dt.nsi[Corpus=='SWBD', ent_norm := ent_norm-.05]
+p = ggplot(dt.nsi[globalId<=100], aes(x = globalId, y = ent_norm)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Corpus, lty=Corpus), alpha=.5) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty=Corpus)) +
+    scale_x_continuous(breaks = c(1,25,50,75,100)) +
+    labs(x = 'Sentence position within dialogue', y = 'Normalized sentence information') +
+    theme_light() + theme(legend.position=c(.1,.8))
+pdf('figs/nsi_vs_global.pdf', 5, 5)
+plot(p)
+dev.off()
 
 
 
