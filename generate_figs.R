@@ -50,6 +50,34 @@ plot(p)
 dev.off()
 
 
+##
+# Statistical tests for Fig.1 (a), sentence information
+
+# sent info increases with global position
+m = lmer(log(ent) ~ globalId + (1|convId), dt.swbd)
+summary(m)
+# globalId    3.947e-04  5.946e-05 1.036e+05   6.638  3.2e-11 ***
+m = lmer(log(ent) ~ globalId + (1|convId), dt.bnc)
+summary(m)
+# globalId    1.424e-03  8.542e-05 4.212e+04   16.67   <2e-16 ***
+
+# Extra model for SWBD (after the early boost)
+m = lmer(log(ent) ~ globalId + (1|convId), dt.swbd[globalId>=10])
+summary(m)
+# globalId    2.060e-04  6.848e-05 9.367e+04   3.008  0.00263 **
+
+
+##
+# Statistical tests for Fig.2 (b), normalied sentence information
+
+# norm sent info increases withi global position
+m = lmer(log(ent_norm) ~ globalId + (1|convId), dt.swbd.norm)
+summary(m)
+# globalId     5.727e-04  4.598e-05  1.036e+05   12.46   <2e-16 ***
+m = lmer(log(ent_norm) ~ globalId + (1|convId), dt.bnc.norm)
+summary(m)
+# globalId     1.392e-03  8.221e-05  4.083e+04   16.93   <2e-16 ***
+
 
 ##
 # What are mean topic length
