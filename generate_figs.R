@@ -11,9 +11,11 @@ library(lmerTest)
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 
-##
+#######################
 # Plot Figure 1
 # combine the original Fig 1 & 2
+#######################
+
 dt.swbd = fread('data/SWBD_entropy_db.csv')
 dt.swbd.norm = fread('data/SWBD_entropy_db_norm.csv')
 dt.bnc = fread('data/BNC_entropy_db.csv')
@@ -27,7 +29,7 @@ p = ggplot(dt.si[globalId<=100], aes(x = globalId, y = ent)) +
     stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', aes(fill=Corpus, lty=Corpus), alpha=.5) +
     stat_summary(fun.y = mean, geom = 'line', aes(lty=Corpus)) +
     scale_x_continuous(breaks = c(1,25,50,75,100)) +
-    labs(x = 'Sentence position within dialogue', y = 'Sentence information (bit)') +
+    labs(x = 'Sentence position within dialogue', y = 'Sentence information (bits)') +
     theme_light() + theme(legend.position=c(.1,.8))
 pdf('figs/si_vs_global.pdf', 5, 5)
 plot(p)
@@ -52,7 +54,6 @@ dev.off()
 
 ##
 # Statistical tests for Fig.1 (a), sentence information
-
 # sent info increases with global position
 m = lmer(log(ent) ~ globalId + (1|convId), dt.swbd)
 summary(m)
@@ -69,7 +70,6 @@ summary(m)
 
 ##
 # Statistical tests for Fig.2 (b), normalied sentence information
-
 # norm sent info increases withi global position
 m = lmer(log(ent_norm) ~ globalId + (1|convId), dt.swbd.norm)
 summary(m)
@@ -77,6 +77,83 @@ summary(m)
 m = lmer(log(ent_norm) ~ globalId + (1|convId), dt.bnc.norm)
 summary(m)
 # globalId     1.392e-03  8.221e-05  4.083e+04   16.93   <2e-16 ***
+
+# Extra model for SWBD (after the early boost)
+m = lmer(log(ent_norm) ~ globalId + (1|convId), dt.swbd.norm[globalId>=10])
+summary(m)
+# globalId     2.979e-04  5.239e-05  9.370e+04   5.687  1.3e-08 ***
+
+
+
+#######################
+# Plot Fig 2
+# SI and NSI against within-topic position facet_wrap by topic episode
+#######################
+
+# get ggplot default colors
+gg_color_hue <- function(n) {
+  hues = seq(15, 375, length=n+1)
+  hcl(h=hues, l=65, c=100)[1:n]
+}
+my_colors = gg_color_hue(2)
+
+# read data, rename and combine
+dt.swbd = fread('data/SWBD_entropy_db.csv')
+dt.swbd.norm = fread('data/SWBD_entropy_db_norm.csv')
+dt.bnc = fread('data/BNC_entropy_db.csv')
+dt.bnc.norm = fread('data/BNC_entropy_db_norm.csv')
+
+# sent info
+dt.swbd[, Corpus:='SWBD']
+dt.bnc[, Corpus:='BNC']
+dt.si = rbindlist(list(dt.swbd[,c('ent', 'topicId', 'inTopicId', 'Corpus')],
+    dt.bnc[,c('ent', 'topicId', 'inTopicId', 'Corpus')]))
+dt.si$episodeId = paste('Episode', as.character(dt.si$topicId))
+
+p = ggplot(dt.si[inTopicId <= 10 & topicId<=6,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Corpus)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Corpus)) +
+    facet_wrap(~episodeId, nrow = 1) +
+    scale_x_continuous(breaks = 1:10) +
+    scale_fill_manual(values = c('BNC' = my_colors[1], 'SWBD' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC' = 1, 'SWBD' = 3)) +
+    theme_light() + theme(legend.position = c(.85, .1), legend.direction='horizontal') +
+    xlab('Relative sentence position within topic episode') + ylab('Sentence information (bits)')
+pdf('figs/si_vs_inPos_facet.pdf', 9, 2.5)
+plot(p)
+dev.off()
+
+# norm sent info
+dt.swbd.norm[, Corpus:='SWBD']
+dt.bnc.norm[, Corpus:='BNC']
+dt.nsi = rbindlist(list(dt.swbd.norm[,c('ent_norm', 'topicId', 'inTopicId', 'Corpus')],
+    dt.bnc.norm[,c('ent_norm', 'topicId', 'inTopicId', 'Corpus')]))
+dt.nsi$episodeId = paste('Episode', as.character(dt.nsi$topicId))
+# add offsets
+dt.nsi[Corpus=='SWBD', ent_norm := ent_norm - .05]
+dt.nsi[Corpus=='BNC', ent_norm := ent_norm + .05]
+
+p = ggplot(dt.nsi[inTopicId <= 10 & topicId<=6,], aes(x = inTopicId, y = ent_norm)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Corpus)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Corpus)) +
+    facet_wrap(~episodeId, nrow = 1) +
+    scale_x_continuous(breaks = 1:10) +
+    scale_fill_manual(values = c('BNC' = my_colors[1], 'SWBD' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC' = 1, 'SWBD' = 3)) +
+    theme_light() + theme(legend.position = c(.85, .1), legend.direction='horizontal') +
+    xlab('Relative sentence position within topic episode') + ylab('Normalized sentence information')
+pdf('figs/nsi_vs_inPos_facet.pdf', 9, 2.5)
+plot(p)
+dev.off()
+
+
+
+#######################
+# Plot Fig.3
+#######################
+
+
+
 
 
 ##
