@@ -152,6 +152,61 @@ dev.off()
 # Plot Fig.3
 #######################
 
+# read
+dt.swbd = readRDS('data/swbd.leader.new.rds')
+dt.bnc = readRDS('data/bnc.leader.tdbf.rds')
+setnames(dt.swbd, c('topicID','inTopicID'), c('topicId', 'inTopicId'))
+setnames(dt.bnc, c('topicID','inTopicID'), c('topicId', 'inTopicId'))
+
+# change byLeader column to character
+dt.swbd$byLeader = as.character(dt.swbd$byLeader)
+dt.swbd[dt.swbd$byLeader == 'TRUE',]$byLeader = 'initiator'
+dt.swbd[dt.swbd$byLeader == 'FALSE',]$byLeader = 'responder'
+setnames(dt.swbd, 'byLeader', 'role')
+dt.bnc$byLeader = as.character(dt.bnc$byLeader)
+dt.bnc[dt.bnc$byLeader == 'TRUE',]$byLeader = 'initiator'
+dt.bnc[dt.bnc$byLeader == 'FALSE',]$byLeader = 'responder'
+setnames(dt.bnc, 'byLeader', 'role')
+
+## plot
+dt.swbd.tmp = dt.swbd[, .(ent, entc, inTopicId, role)][, corpus := 'SWBD'][, Group := '']
+dt.bnc.tmp = dt.bnc[, .(ent, entc, inTopicId, role)][, corpus := 'BNC'][, Group := '']
+dt.all = rbindlist(list(dt.swbd.tmp, dt.bnc.tmp))
+dt.all[corpus == 'SWBD' & role == 'initiator', Group := 'SWBD: initiator']
+dt.all[corpus == 'SWBD' & role == 'responder', Group := 'SWBD: responder']
+dt.all[corpus == 'BNC' & role == 'initiator', Group := 'BNC: initiator']
+dt.all[corpus == 'BNC' & role == 'responder', Group := 'BNC: responder']
+
+p = ggplot(dt.all[inTopicId <= 10,], aes(x = inTopicId, y = ent)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_light() + theme(legend.position = c(.75, .2)) +
+    xlab('Relative sentence position within topic episode') + ylab('Sentence information (bits)') +
+    scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
+        'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
+    scale_shape_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 1, 'SWBD: initiator' = 4, 'SWBD: responder' = 4))
+pdf('figs/si_vs_inPos_role.pdf', 4, 4)
+plot(p)
+dev.off()
+
+p = ggplot(dt.all[inTopicId <= 10,], aes(x = inTopicId, y = entc)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_light() + theme(legend.position = c(.75, .2)) +
+    xlab('within-episode position') + ylab('normalized entropy') +
+    scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
+        'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
+    scale_shape_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 1, 'SWBD: initiator' = 4, 'SWBD: responder' = 4))
+pdf('figs/nsi_vs_inPos_role.pdf', 4, 4)
+plot(p)
+dev.off()
+
 
 
 
