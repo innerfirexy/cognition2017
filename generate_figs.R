@@ -169,8 +169,8 @@ dt.bnc[dt.bnc$byLeader == 'FALSE',]$byLeader = 'responder'
 setnames(dt.bnc, 'byLeader', 'role')
 
 ## plot
-dt.swbd.tmp = dt.swbd[, .(ent, entc, inTopicId, role)][, corpus := 'SWBD'][, Group := '']
-dt.bnc.tmp = dt.bnc[, .(ent, entc, inTopicId, role)][, corpus := 'BNC'][, Group := '']
+dt.swbd.tmp = dt.swbd[, .(ent, entc, wordNum, td, bf, inTopicId, role)][, corpus := 'SWBD'][, Group := '']
+dt.bnc.tmp = dt.bnc[, .(ent, entc, wordNum, td, bf, inTopicId, role)][, corpus := 'BNC'][, Group := '']
 dt.all = rbindlist(list(dt.swbd.tmp, dt.bnc.tmp))
 dt.all[corpus == 'SWBD' & role == 'initiator', Group := 'SWBD: initiator']
 dt.all[corpus == 'SWBD' & role == 'responder', Group := 'SWBD: responder']
@@ -206,6 +206,79 @@ p = ggplot(dt.all[inTopicId <= 10,], aes(x = inTopicId, y = entc)) +
 pdf('figs/nsi_vs_inPos_role.pdf', 4, 4)
 plot(p)
 dev.off()
+
+
+
+#######################
+# Plot Fig.5
+#######################
+# Use the dt.all from last step
+p.sl = ggplot(subset(dt.all, inTopicId <= 10), aes(x = inTopicId, y = wordNum)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_light() + theme(legend.position = c(.8, .15)) +
+    xlab('Relative sentence position') + ylab('Sentence length (number of words)') +
+    guides(fill = guide_legend(title = 'Group'),
+        lty = guide_legend(title = 'Group'),
+        shape = guide_legend(title = 'Group')) +
+    scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
+        'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
+    scale_shape_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 1, 'SWBD: initiator' = 4, 'SWBD: responder' = 4))
+
+p.td = ggplot(subset(dt.all, inTopicId <= 10), aes(x = inTopicId, y = td)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_light() + theme(legend.position = c(.8, .15)) +
+    xlab('Relative sentence position') + ylab('Tree depth') +
+    guides(fill = guide_legend(title = 'Group'),
+        lty = guide_legend(title = 'Group'),
+        shape = guide_legend(title = 'Group')) +
+    scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
+        'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
+    scale_shape_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 1, 'SWBD: initiator' = 4, 'SWBD: responder' = 4))
+
+p.bf = ggplot(subset(dt.all, inTopicId <= 10), aes(x = inTopicId, y = bf)) +
+    stat_summary(fun.data = mean_cl_boot, geom = 'ribbon', alpha = .5, aes(fill = Group)) +
+    stat_summary(fun.y = mean, geom = 'line', aes(lty = Group)) +
+    stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
+    scale_x_continuous(breaks = 1:10) +
+    theme_light() + theme(legend.position = c(.8, .15)) +
+    xlab('Relative sentence position') + ylab('Branching factor') +
+    guides(fill = guide_legend(title = 'Group'),
+        lty = guide_legend(title = 'Group'),
+        shape = guide_legend(title = 'Group')) +
+    scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
+        'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
+    scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
+    scale_shape_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 1, 'SWBD: initiator' = 4, 'SWBD: responder' = 4))
+
+
+library(gridExtra)
+# the function that gets the legend of a plot (for multiple plotting that shares one legend)
+g_legend = function(p) {
+    tmp = ggplotGrob(p)
+    leg = which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    legend = tmp$grobs[[leg]]
+    legend
+}
+
+p.sl = p.sl + theme(legend.position = 'bottom') #plot.title = element_text(size = 12)
+lgd = g_legend(p.sl)
+
+pdf('figs/sltdbf.pdf', 10, 4)
+grid.arrange(arrangeGrob(p.sl + theme(legend.position = 'none'),
+                        p.td + theme(legend.position = 'none'),
+                        p.bf + theme(legend.position = 'none'), ncol = 3),
+            lgd, nrow = 2, heights = c(9, 1))
+dev.off()
+
+
 
 
 
