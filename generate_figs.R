@@ -198,7 +198,7 @@ p = ggplot(dt.all[inTopicId <= 10,], aes(x = inTopicId, y = entc)) +
     stat_summary(fun.y = mean, geom = 'point', aes(shape = Group)) +
     scale_x_continuous(breaks = 1:10) +
     theme_light() + theme(legend.position = c(.75, .2)) +
-    xlab('within-episode position') + ylab('normalized entropy') +
+    xlab('Relative sentence position within topic episode') + ylab('Normalized sentence information') +
     scale_fill_manual(values = c('BNC: initiator' = my_colors[1], 'BNC: responder' = my_colors[1],
         'SWBD: initiator' = my_colors[2], 'SWBD: responder' = my_colors[2])) +
     scale_linetype_manual(values = c('BNC: initiator' = 1, 'BNC: responder' = 3, 'SWBD: initiator' = 1, 'SWBD: responder' = 3)) +
